@@ -1,3 +1,11 @@
+/* Global Font and Color Definitions */
+body {
+  font-family: "Source Sans Pro", -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 14px;
+  color: black;
+  background-color: white;
+}
+
 /* This hack is needed to temporary disable the predefined layout style */
 d-article {
     contain: none;
@@ -10,7 +18,7 @@ d-article {
 /* ScrollSpy active styles (see JAVASCRIPT tab for activation) */
 .d-contents nav ul li.active > a { 
     font-weight: normal;  
-    /* border-left: 1px solid #2780e3; */
+    border-left: 1px solid #2780e3; 
     color: #0f2e3d !important;
   }
 
@@ -25,15 +33,15 @@ d-article {
   position: fixed;
   left: calc(7%);
   top: calc(5.5%);
-  width: 20%; */
+  width: 20%; 
   max-width: 260px;
   max-height: 85%;
   overflow-y: auto;
   background: white;          
   backdrop-filter: blur(10px); 
-  border-right: 1px solid rgba(0, 0, 0, 0.1); */
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 1px; */
+  border-radius: 1px; 
   transition: all 0.5s;   
   z-index: 999;
   }
@@ -61,24 +69,42 @@ d-article {
   }
 
 
-/* CSS Font Defaults */
-$body-bg: white;
-$body-color: black;
-$link-color: #75AADB;
-$code-block-bg-alpha: -.8;
-$code-block-bg: #f0f0f0;
-$code-block-border-left: #bcb8b6;
-$font-family-sans-serif: "Source Sans Pro", -apple-system, "system-ui", "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-$font-size-root: 14px;
-$toc-font-size: 10px;
+#TOC, .d-contents nav, .d-contents nav ul li, .d-contents nav ul li a {
+  font-size: 12px;
+}
+
 
 h1, h2, h3, h4, h5, h6 {
-  font-weight: normal;
+  font-weight: semi-bold;
   margin-top: 30px;
 }
 
-/*$code-block-bg: #160941;
-/*$code-block-border-left: #2d1283;
+/* Disable hover pointer-events to prevent blocking underlying layers */
+#TOC:hover, 
+.d-contents nav:hover, 
+.d-contents nav ul li:hover, 
+.d-contents nav ul li a:hover {
+  pointer-events: none !important;
+}
 
+/* Limit width of code chunks and console outputs */
+pre, code, .code-output, .sourceCode, pre.sourceCode {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
 
+/* Expand width of central markdown content panel */
+d-article {
+  max-width: 120% !important;
+  width: 120% !important;
+}
 
+/* Increase width and height of rendered output images */
+img, .figure, figure img {
+  max-width: 120% !important;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
