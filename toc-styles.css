@@ -9,7 +9,7 @@ d-article {
 
 /* ScrollSpy active styles (see JAVASCRIPT tab for activation) */
 .d-contents nav ul li.active > a { 
-    font-weight: bold;  
+    font-weight: semi-bold;  
     /* border-left: 1px solid #2780e3; */
     color: #0f2e3d !important;
   }
@@ -20,27 +20,44 @@ d-article {
   }
   
 /* Sidebar Navigation */
-#TOC {
+/* #TOC {
   opacity: 1;
   position: fixed;
   left: calc(7%);
   top: calc(5.5%);
   /* width: 20%; */
-  max-width: 260px;
+/*   max-width: 260px;
   max-height: 85%;
   overflow-y: auto;
   background: white;            /* Optional, remove to enable the blur filter (just for fun). */
-  backdrop-filter: blur(10px);  /* Optional, wouldn't not work with Firefox browser. */
-  padding: 10px;                /* Optional */
+/*   backdrop-filter: blur(10px);  /* Optional, wouldn't not work with Firefox browser. */
+/*   padding: 10px;                /* Optional */
   /* border-right: 1px solid rgba(0, 0, 0, 0.1); */
-  border: 1px solid rgba(0, 0, 0, 0.1);
+/*   border: 1px solid rgba(0, 0, 0, 0.1);
   /* border-radius: 1px; */
-  transition: all 0.5s;   
-  z-index: 999;
-  }
+/*   transition: all 0.5s;   
+/*   z-index: 999;
+/*   }
 
+/* Hide the TOC when resized to mobile or tablet:  480px, 768px, 900px */
+@media screen and (max-width: 900px) {
+  #TOC {
+      position: relative;
+      left: 0;
+      top: 0;
+      max-width: none;
+      max-height: none;
+      overflow-y: auto;
+      border: none;
+      background: none; }
+      .d-contents nav h3 {
+        text-indent: 0; }
+      input[type="button" i] {  
+        display: none; }
+    }
+  
 #TOC.hide { 
-  opacity: 0;
+  opacity: 1;
   transition: visibility 0s linear 0.5s, opacity 0.5s;
   }
 
@@ -50,42 +67,24 @@ d-article {
 /*  transition: all 0.5s;
 /*  }
 
-/* Hide the TOC when resized to mobile or tablet:  480px, 768px, 900px */
-@media screen and (max-width: 1000px) {
-#TOC {
-    position: relative;
-    left: 0;
-    top: 0;
-    max-width: none;
-    max-height: none;
-    overflow-y: auto;
-    border: none;
-    background: none; }
-    .d-contents nav h3 {
-      text-indent: 0; }
-    input[type="button" i] {  
-      display: none; }
-  }
-
 
 /* CSS Font Defaults */
 $body-bg: white;
 $body-color: black;
 $link-color: #75AADB;
 $code-block-bg-alpha: -.8;
-$code-block-bg: #f0f0f0;
-$code-block-border-left: #bcb8b6;
+//$code-block-bg: #f0f0f0;
+//$code-block-border-left: #bcb8b6;
+$code-block-bg: #160941;
+$code-block-border-left: #2d1283;
 
 $font-family-sans-serif: "Source Sans Pro", -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-$font-size-root: 17px;
-$toc-font-size: 12px;
-//$code-block-bg: #160941;
-//$code-block-border-left: #2d1283;
-
+$font-size-root: 15px;
+$toc-font-size: 10px;
 
 h1, h2, h3, h4, h5, h6 {
-  font-weight: bold;
-  margin-top: 40px;
+  font-weight: semi-bold;
+  margin-top: 30px;
 }
 
 //  text-shadow: -0.8px -0.8px 0 rgba(0, 0, 0, .3);
