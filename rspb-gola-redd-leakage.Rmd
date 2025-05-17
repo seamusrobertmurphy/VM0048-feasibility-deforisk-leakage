@@ -2,7 +2,7 @@
 title: 'VM0048: Leakage Belt Delineation of UDef LB'
 author: "Winrock Intl"
 date: "2025-02-26"
-output: word_document
+output: html_document
 ---
 
 ```{r, echo=F, message=F, warning=F, error=F, comment=NA}
