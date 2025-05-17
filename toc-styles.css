@@ -97,7 +97,7 @@ pre, code, .code-output, .sourceCode, pre.sourceCode {
 
 /* Expand width of central markdown content panel */
 d-article {
-  max-width: 120% !important;
+  max-width: 120% !important; /* Adjust percentage as needed */
   width: 120% !important;
 }
 
