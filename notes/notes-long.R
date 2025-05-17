@@ -1097,3 +1097,10 @@ places_count = sf::st_intersection(places, leakage_belt)
 places_count_whole
 places_count
 ```
+
+
+
+Valid themes include default, bootstrap, cerulean, cosmo, darkly, flatly, journal, lumen, paper, readable, sandstone, simplex, spacelab, united, and yeti. Pass null for no theme (in this case you can use the css parameter to add your own styles).
+
+
+highlight specifies the syntax highlighting style. Supported styles include default, tango, pygments, kate, monochrome, espresso, zenburn, haddock, breezedark, and textmate. Pass null to prevent syntax highlighting.

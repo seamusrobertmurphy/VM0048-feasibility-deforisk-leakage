@@ -1,16 +1,34 @@
 ---
-title: 'VM0048: Leakage Belt Delineation of UDef LB'
+title: 'VM0048: Leakage Belt Delineation'
 author: "Winrock Intl"
-date: "2025-02-26"
-output: html_document
+date: "2025-05-16"
+output: 
+  html_document: 
+    css: styles.scss
+    theme: "united"
+    highlight: pygments
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float: 
+      collapsed: false
+    fig_width: 12
+    fig_height: 8
+
+editor_options: 
+  markdown: 
+    wrap: 120
 ---
 
 ```{r, echo=F, message=F, warning=F, error=F, comment=NA}
 readRenviron("~/.Renviron")
 options(repos = c(CRAN = "https://cloud.r-project.org"))
+#bootstrap, cerulean, cosmo, darkly, flatly, journal, lumen, paper, readable, sandstone, simplex, spacelab, united, and yeti
 
 library(cols4all)
+library(distill)
 library(dplyr)
+library(flextable)
 library(knitr)
 library(latex2exp)
 library(leaflet)
@@ -20,6 +38,8 @@ library(leafgl)
 library(leafem)
 library(latticeExtra)
 library(maptiles)
+library(markdowntemplates)
+library(palmerpenguins)
 library(raster)
 library(Rcpp)
 library(RcppThread)
@@ -31,6 +51,7 @@ library(tidyterra)
 library(tinytex)
 library(tmap)
 library(tmaptools)
+library(xaringan)
 
 base::options(htmltools.dir.version = F, htmltools.preserve.raw = F)
 knitr::opts_chunk$set(
@@ -49,8 +70,8 @@ terraOptions(memfrac=0.9, tempdir = "./temp")
 #TOC::before {
 content: "";
 display: block;
-height: 80px;
-width: 210px;
+height: 55px;
+width: 180px;
 background-image: url(https://winrock.org/wp-content/uploads/2021/12/Winrock-logo-R.png);
 background-size: contain;
 background-position: 50% 50%;
@@ -70,15 +91,18 @@ jurisdiction$name = 'Grand Cape Mount & Gharpolu Counties'
 aoi = sf::read_sf("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/AOI/Archive/ProjectArea_CF-Expansion_051525/updated_areas.shp") |>
   sf::st_make_valid() |>
   sf::st_transform("EPSG:32629") |>  
-  sf::st_cast("MULTIPOLYGON") |> sf::st_as_sf() |> dplyr::select("Name")
+  sf::st_cast("MULTIPOLYGON") |> sf::st_as_sf()# |> dplyr::select("Name")
 
 aoi$area_ha = round(as.numeric(sf::st_area(aoi) * 0.0001, 4))
-aoi |> sf::st_drop_geometry() |> janitor::adorn_totals() 
+aoi |> sf::st_drop_geometry() |> janitor::adorn_totals() |> 
+  flextable::flextable() |> 
+  flextable::fontsize(size=8,part="all") |> 
+  flextable::autofit()
 ```
 
 # Derive Leakage Area Belt
 
-```{r, message=F, warning=F, error=F, comment=NA, eval=F, out.width="50%"}
+```{r, message=F, warning=F, error=F, comment=NA, eval=F}
 aoi_union = sf::st_transform(aoi, 32629) |>  sf::st_union() |> sf::st_make_valid()
 leakage_buffer = sf::st_buffer(aoi_union, dist = 5500, endCapStyle="ROUND") |>
   sf::st_as_sf()
@@ -86,22 +110,41 @@ leakage_buffer = concaveman::concaveman(leakage_buffer, concavity=5) |>
   sf::st_zm() |> sf::st_make_valid()
 leakage_belt_whole = sf::st_buffer(leakage_buffer, dist = 4500, endCapStyle="ROUND") |>
   sf::st_make_valid() 
-leakage_belt    = sf::st_difference(leakage_belt_whole, st_union(st_combine(aoi_union)))
-leakage_belt$area_ha = round(as.numeric(sf::st_area(leakage_belt) * 0.0001, 4)) 
-leakage_belt = sf::st_intersection(country, leakage_belt)
 
-tmap::tmap_mode("plot")
+tmap::tmap_mode("view")
 tmap::tm_shape(leakage_belt_whole) + 
   tmap::tm_polygons(col="orange",fill="orange",fill_alpha=0.3,lwd=1)+
   #tmap::tm_add_legend(type="lines",col="orange",labels="Leakage Belt (10km)") +
   tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1, col="white") +
   tmap::tm_basemap("Esri.WorldImagery")
+```
 
+```{r, echo=F, message=F, warning=F, error=F, comment=NA, eval=T}
+# reload from local file to free up working memory
+leakage_belt_whole   = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/LEAKAGE/Archive/LeakageBelt_10k-Radius_UnFiltered-Whole.shp") 
+
+tmap::tmap_mode("view")
+tmap::tm_shape(leakage_belt_whole) + 
+  tmap::tm_polygons(col="orange",fill="orange",fill_alpha=0.3,lwd=1)+
+  #tmap::tm_add_legend(type="lines",col="orange",labels="Leakage Belt (10km)") +
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1, col="white") +
+  #tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
+  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top")) +
+  tmap::tm_basemap("Esri.WorldImagery")
+```
+
+```{r, message=F, warning=F, error=F, comment=NA, eval=F}
+leakage_belt    = sf::st_difference(leakage_belt_whole, st_union(st_combine(aoi_union)))
+leakage_belt$area_ha = round(as.numeric(sf::st_area(leakage_belt) * 0.0001, 4)) 
+leakage_belt = sf::st_intersection(country, leakage_belt)
+
+tmap::tmap_mode("view")
 tmap::tm_shape(leakage_belt) + 
   tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+
   #tmap::tm_add_legend(type="lines",col="yellow",labels="Leakage Belt (10km)") +  
-  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.2, col="white") + 
-  tmap::tm_text(text="Name", size=0.3, col="white") +
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.4, col="white") + 
+  tmap::tm_text(text="Name", size=0.5, col="white") +
   tmap::tm_basemap("Esri.WorldImagery")
 
 # save locally
@@ -110,35 +153,23 @@ tmap::tm_shape(leakage_belt) +
 #sf::st_write(leakage_belt_whole, "OneDrive.../20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/LEAKAGE/Archive/LeakageBelt_10k-Radius_UnFiltered-Whole.shp")
 ```
 
-```{r, echo=F, message=F, warning=F, error=F, comment=NA, eval=T, out.width="50%"}
-# reload from local file to free up working memory
+```{r, echo=F, message=F, warning=F, error=F, comment=NA, eval=T}
 leakage_belt   = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/LEAKAGE/Archive/LeakageBelt_10k-Radius_UnFiltered/leakage_belt_10km_liberia_ext.shp") 
-leakage_belt_whole   = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/LEAKAGE/Archive/LeakageBelt_10k-Radius_UnFiltered-Whole.shp") 
 leakage_belt$area_ha = round(as.numeric(sf::st_area(leakage_belt) * 0.0001, 4))
 leakage_belt$Name = "Leakage Belt 10km Radius"
 leakage_belt
 
-tmap::tmap_mode("plot")
-tmap::tm_shape(leakage_belt_whole) + 
-  tmap::tm_polygons(col="orange",fill="orange",fill_alpha=0.3,lwd=1)+
-  #tmap::tm_add_legend(type="lines",col="orange",labels="Leakage Belt (10km)") +
-  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1, col="white") +
-  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
-  tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
-  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top")) +
-  tmap::tm_basemap("Esri.WorldImagery")
-
+tmap::tmap_mode("view")
 tmap::tm_shape(leakage_belt) + 
   tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+
   #tmap::tm_add_legend(type="lines",col="yellow",labels="Leakage Belt (10km)") +  
-  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.2, col="white") + 
-  tmap::tm_text(text="Name", size=0.4, col="white") +
-  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.4, col="white") + 
+  tmap::tm_text(text="Name", size=0.5, col="white") +
+  #tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
   tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
   tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top")) +
   tmap::tm_basemap("Esri.WorldImagery")
 ```
-
 
 # Derive Leakage Area Masks
 
@@ -186,19 +217,18 @@ roads_mask = sf::st_combine(roads_one_buffer, roads_two_buffer) |>
   sf::st_union() |> sf::st_cast("POLYGON")
 
 # Visual check
-tmap::tmap_mode("plot")
+tmap::tmap_mode("view")
 tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
   tmap::tm_shape(roads_one_simplified_harsh) + tmap::tm_lines(lwd=2, col="red") +
   tmap::tm_shape(roads_two_simplified) + tmap::tm_lines(lwd=2, col="green") +
   tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=1, col="pink") + 
-  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  #tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
   tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
   tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top"))
 
 # Save output to MASKS folder and purge memory
 #sf::st_write(roads_mask, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/MASKS/LeakageMask_Roads_10km-Buffer_051625.shp", delete_dsn=T)
 ```
-
 
 ```{r, echo=F}
 roads_one = sf::st_read("~/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/ROADS/Archive/roads_simplified_one.shp")
@@ -217,15 +247,20 @@ roads_one_simplified_harsh = rmapshaper::ms_simplify(
   roads_one_simplified, keep=0.01) 
 
 # Visual check
-tmap::tmap_mode("plot")
+tmap::tmap_mode("view")
 tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
   tmap::tm_shape(roads_one_simplified_harsh) + tmap::tm_lines(lwd=2, col="red") +
   tmap::tm_shape(roads_two_simplified) + tmap::tm_lines(lwd=2, col="green") +
   tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=1, col="pink") + 
-  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  #tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
   tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
   tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top")) 
 ```
+
+<div>
+
+</div>
+
 ## Habitat Mask
 
 ```{r, eval=T, error=F}
@@ -295,7 +330,7 @@ slope_mask = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInt
 
 ```{r}
 # Visual check
-tmap::tmap_mode("plot")
+tmap::tmap_mode("view")
 tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
   tmap::tm_shape(wetlands) + tm_raster(col.legend = tm_legend("Wetlands (GLWD")) +
   tmap::tm_shape(leakage_belt) + tm_polygons(col="yellow",fill="yellow",fill_alpha=0.4, lwd=1.5)+ 
@@ -303,7 +338,7 @@ tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
   tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1.5, col="red") + 
   tmap::tm_text(text="Name", size=0.3, col="black") +
   tmap::tm_shape(roads_mask) + tmap::tm_borders(col="purple") +
-  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  #tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
   tmap::tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
   tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top"))
 
@@ -315,7 +350,7 @@ wetlands = terra::rast("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInter
 protected_areas = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/HABITAT/Protected Areas/Archive/WDPA_Mar2025_Public_32629_GOLA.shp")
 
 # Visual check
-tmap::tmap_mode("plot")
+tmap::tmap_mode("view")
 #tmap::tm_basemap("OpenStreetMap") +
 tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
   tmap::tm_shape(wetlands) + tm_raster(col.legend = tm_legend("Wetlands (GLWD")) +
@@ -324,10 +359,9 @@ tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
   tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1.5, col="red") + 
   tmap::tm_text(text="Name", size=0.3, col="black") +
   tmap::tm_shape(roads_mask) + tmap::tm_borders(col="purple") +
-  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  #tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
   tmap::tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
   tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top"))
-
 
 # slope filter is large file with dense linework that 
 # needs seperate mapping to visualize and slower rendering
@@ -335,7 +369,7 @@ tmap::tm_shape(slope_mask) + tmap::tm_borders(col="purple") +
   tmap::tm_shape(leakage_belt)) + tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+ 
   tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.2, col="white") + 
   tmap::tm_text(text="Name", size=0.4, col="white") +
-  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  #tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
   tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
   tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top"))
 ```
@@ -359,7 +393,6 @@ leakage_mask_c = sf::st_union(leakage_mask_b, protected_areas_leakage_mask)
 sf::st_write(leakage_mask_c, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/LEAKAGE/Leakage Masks/", delete_dsn=T)
 ```
 
-
 ## Tally Features
 
 ```{r, message=F, warning=F, error=F, comment=NA, eval=F}
@@ -382,5 +415,3 @@ places_count = sf::st_intersection(places, leakage_belt)
 places_count_whole
 places_count
 ```
-
-
