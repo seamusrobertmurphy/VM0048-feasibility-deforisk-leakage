@@ -1,0 +1,253 @@
+---
+title: "VM0048: Expanded Deforestation" 
+subtitle: "Baseline Deforestation in Surrounding Community Forests 2013-2023"
+author:
+  - Winrock International^[krysla.lima@winrock.org, seamus.murphy@winrock.org]
+date: "2025-05-13"
+output: 
+  word_document:
+  keep_md: TRUE
+  toc: FALSE
+always_allow_html: TRUE
+editor_options: 
+  markdown: 
+    wrap: 80
+---
+
+```{r, echo=F, message=F, warning=F, error=F, comment=NA}
+#readRenviron("~/.Renviron")
+#readRenviron("~/.Rprofile")
+#{bash}: "source  ~/.zshrc"
+
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+#libs = c(
+#  "basemaps", "c2z", "cpp11", "cpp11armadillo", "cpp11eigen", "cols4all", 
+#  "earthdatalogin", "elevatr", "geodata", "ggmap", "htmltools", "janitor", 
+#  "jsonlite", "kableExtra", "knitr", "latex2exp", "leaflet", 
+#  "leaflet.providers", "lwgeom", "magrittr", "maptiles", "MASS", 
+#  "methods", "osmdata", "pander", "psych", "raster", 
+#  "rasterVis", "RColorBrewer", "Rcpp", "Rcpp11", "raster", "readxl", 
+#  "rmarkdown", "rnaturalearth", "rnaturalearthdata", "RStoolbox", 
+#  "s2", "sf", "sits", "sp",
+#  "stars", "stringr", "terra", "terrainr", "tibble", "tidyr", "tidyverse", 
+#  "tinytex", "tmap", "tmaptools", "torch", "units"
+#  )
+
+#devtools::install_github("r-spatial/sf", configure.args = c(
+#  "--with-gdal-config=/opt/local/bin/gdal-config", 
+#  "--with-proj-include=/opt/local/lib/proj9/include", 
+#  "--with-proj-lib=/opt/local/lib/proj9/lib", 
+#  "--with-geos-config=/opt/local/bin/geos-config"))
+
+#install.packages('terra', type="source", configure.args = c(
+#  "--with-gdal-config=/opt/local/bin/gdal-config", 
+#  "--with-proj-include=/opt/local/lib/proj9/include", 
+#  "--with-proj-lib=/opt/local/lib/proj9/lib", 
+#  "--with-geos-config=/opt/local/bin/geos-config"))
+
+#installed_libs = libs %in% rownames(installed.packages())
+#if(any(installed_libs==F)){install.packages(libs[!installed_libs],repos="https://cloud.r-project.org")}
+#invisible(lapply(libs, library, character.only = T))
+#lapply(libs, require, character.only = T)
+
+#linux installation paths
+#install.packages("sf",type = "source",configure.args = c(
+#    "--with-gdal-config=/usr/bin/gdal-config",
+#    "--with-geos-config=/usr/bin/geos-config",
+#    "--with-proj-include=/usr/include",
+#    "--with-proj-lib=/usr/lib64"))
+
+#install.packages("terra",type = "source",configure.args = c(
+#    "--with-gdal-config=/usr/bin/gdal-config",
+#    "--with-proj-data=/usr/share/proj"))
+
+library(caret)
+library(cols4all)
+library(dplyr)
+#library(ForestTools)
+library(e1071)
+library(flextable)
+library(ggplot2)
+library(ggplotify)
+library(janitor)
+library(pkgconfig)
+library(knitr)
+library(latex2exp)
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.providers)
+library(leafgl)
+library(leafem)
+library(latticeExtra)
+library(MASS)
+library(maptiles)
+library(ModelMetrics)
+library(performanceEstimation)
+library(pkgconfig)
+library(raster)
+library(Rcpp)
+library(RcppThread)
+library(randomForest)
+library(rmarkdown)
+library(sf)
+library(sp)
+library(terra)
+library(tidyterra)
+library(tinytex)
+library(tmap)
+library(tmaptools)
+
+
+base::options(htmltools.dir.version = F, htmltools.preserve.raw = F)
+
+knitr::opts_chunk$set(
+  echo    = TRUE, 
+  message = FALSE, 
+  warning = FALSE,
+  error   = FALSE, 
+  comment = NA,
+  tidy.opts = list(width.cutoff = 120)
+  ) 
+
+sf::sf_use_s2(use_s2 = FALSE) # non-spherical geometries
+terraOptions(memfrac=0.9, tempdir = "./temp")
+#renv::restore() # reload packages if someone previously ran 'renv::init()' 
+#renv::init() # save new package list after editing script 
+```
+
+```{css, echo=FALSE, class.source = 'foldable'}
+#TOC::before {
+  content: "";
+  display: block;
+  height: 80px;
+  width: 210px;
+  background-image: url(https://winrock.org/wp-content/uploads/2021/12/Winrock-logo-R.png);
+  background-size: contain;
+  background-position: 50% 50%;
+  padding-top: 80px !important;
+  background-repeat: no-repeat;
+  }
+```
+
+```{r, eval=T, class.source = c("numCode", "r", "numberLines"), cache=T}
+set.seed(77777)
+# Import project aoi
+aoi = sf::read_sf("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/AOI/Archive/ProjectArea_CF-Expansion_051525/updated_areas.shp") |>
+  sf::st_make_valid() |>  # Fix geometry
+  sf::st_transform("EPSG:32629") |>  # Match the raster CRS 
+  sf::st_cast("POLYGON") |> sf::st_cast("MULTIPOLYGON") |> 
+  dplyr::select(Name)
+
+aoi$total_ha = round(as.numeric(sf::st_area(aoi) * 0.0001, 4))
+voi = terra::vect(aoi)
+
+FOREST_COUNTY_2013  = terra::rast("./data/LULC/FOREST_COUNTY_2013.tif") |> terra::project("EPSG:32629")
+FOREST_COUNTY_2023  = terra::rast("./data/LULC/FOREST_COUNTY_2023.tif") |> terra::project("EPSG:32629")
+FOREST_PROJECT_2013 = terra::crop(FOREST_COUNTY_2013, voi, mask=T)
+FOREST_PROJECT_2023 = terra::crop(FOREST_COUNTY_2023, voi, mask=T)
+
+FOREST_BINARY_2013 = terra::classify(FOREST_PROJECT_2013, 
+  rcl=matrix(c(-Inf, 0.5, 0,0.5, Inf, 1),ncol=3,byrow=TRUE))
+FOREST_BINARY_2023 = terra::classify(FOREST_PROJECT_2023, 
+  rcl = matrix(c(-Inf, 0.5, 0,0.5, Inf, 1),ncol=3,byrow=TRUE))
+CHANGE_RASTER <- (FOREST_BINARY_2013 * 10) + FOREST_BINARY_2023
+
+CHANGE_RASTER_RECLASS <- terra::classify(CHANGE_RASTER, 
+                           rcl = matrix(c(0, 0,   # Stable non-forest stays 0
+                                          10,1,   # Forest loss becomes 1
+                                          11,2),  # Stable forest becomes 2
+                                          ncol=2, byrow=TRUE)) |> as.factor()
+
+terra::freq(CHANGE_RASTER_RECLASS)
+
+# Then extract
+sum2013 = terra::extract(FOREST_PROJECT_2013, voi, fun = sum, na.rm = TRUE)
+
+# Set labels clearly:
+levels(CHANGE_RASTER_RECLASS) <- data.frame(
+  value = c(0, 1, 2),
+  label = c("Stable Non-forest", "Forest Loss", "Stable Forest")
+)
+terra::freq(CHANGE_RASTER_RECLASS)
+```
+
+<div>
+
+</div>
+
+```{r, eval=F, class.source = c("numCode", "r", "numberLines"), cache=T}
+tmap::tmap_mode("plot")
+tmap::tm_shape(CHANGE_RASTER_RECLASS) +
+  tm_raster(
+    palette = c("yellow", "red", "forestgreen"),
+    style = "cat",
+    title = "Forest Change  (2013–2023)",
+    labels = c("Stable Non-forest", "Forest Loss", "Stable Forest")
+  ) +
+  tm_shape(aoi) + tm_borders(col="black", lwd=1) +
+    tm_text("Name", col = "Name", size = 0.5) +
+    tm_graticules(lines = TRUE, labels.rot = c(0,90), lwd = 0.2) +
+    tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = 0.5) +
+    tm_compass(color.dark = "gray60", position = c("left", "top")) +
+    tm_layout(legend.outside = FALSE) -> tm1
+tm1
+```
+
+![](images/Winrock_RSPB_Map_SurroundingDeforestation_051325.png)
+
+<div>
+
+</div>
+
+```{r, echo=T, message=F, warning=F, error=F, comment=NA, class.source = c("numCode", "r", "numberLines")}
+cell_area_ha = prod(terra::res(FOREST_COUNTY_2013)) / 10000
+getForestArea = function(forest_raster, voi, cell_area) {
+  forest_ex = terra::extract(forest_raster, voi, fun = sum, na.rm=T)
+  forest_sum = forest_ex[[2]]
+  forest_area = forest_sum * cell_area
+  return(forest_area)
+}
+
+sum2013 = terra::extract(FOREST_PROJECT_2013, voi, fun=sum, na.rm=T)
+sum2023 = terra::extract(FOREST_PROJECT_2023, voi, fun=sum, na.rm=T)
+sum2013 = terra::extract(FOREST_PROJECT_2013, voi, fun = sum, na.rm = TRUE)
+
+aoi$ForestArea2013 = sum2013[,2] * cell_area_ha
+aoi$ForestArea2023 = sum2023[,2] * cell_area_ha
+aoi$AnnualDeforestation_ha = round((aoi$ForestArea2013 - aoi$ForestArea2023) / 10, 2)
+
+add_total <- \(x) {x |> 
+    summarise(Name = "Total", across(where(is.numeric), sum)) |>
+    bind_rows(x)
+  }
+
+summary_table = aoi |>
+  sf::st_drop_geometry() |>
+  dplyr::mutate(
+    Forest_2013_pct = round((ForestArea2013 / total_ha) * 100, 2),
+    Forest_2023_pct = round((ForestArea2023 / total_ha) * 100, 2)) |>
+  dplyr::select(Name, 
+                total_ha, 
+                ForestArea2013, 
+                Forest_2013_pct, 
+                ForestArea2023, 
+                Forest_2023_pct, 
+                AnnualDeforestation_ha) |> add_total()
+
+flextable(summary_table[,1:7]) |> 
+  fontsize(size=8,part="all") |>
+  set_table_properties(layout = "autofit")
+
+#print(summary_table)
+write.csv(summary_table, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Surrounding Deforestation/Winrock_RSPB_Table_SurroundingDeforestation_051525.csv")
+```
+
+<div>
+
+</div>
+
+```{r, class.source = c("numCode", "r", "numberLines")}
+devtools::session_info()
+Sys.getenv()
+```

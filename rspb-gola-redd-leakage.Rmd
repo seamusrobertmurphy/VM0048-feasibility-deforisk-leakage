@@ -1,0 +1,386 @@
+---
+title: 'VM0048: Leakage Belt Delineation of UDef LB'
+author: "Winrock Intl"
+date: "2025-02-26"
+output: word_document
+---
+
+```{r, echo=F, message=F, warning=F, error=F, comment=NA}
+readRenviron("~/.Renviron")
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
+library(cols4all)
+library(dplyr)
+library(knitr)
+library(latex2exp)
+library(leaflet)
+library(leaflet.extras)
+library(leaflet.providers)
+library(leafgl)
+library(leafem)
+library(latticeExtra)
+library(maptiles)
+library(raster)
+library(Rcpp)
+library(RcppThread)
+library(rmarkdown)
+library(sf)
+library(sp)
+library(terra)
+library(tidyterra)
+library(tinytex)
+library(tmap)
+library(tmaptools)
+
+base::options(htmltools.dir.version = F, htmltools.preserve.raw = F)
+knitr::opts_chunk$set(
+  echo    = TRUE, 
+  message = FALSE, 
+  warning = FALSE,
+  error   = FALSE, 
+  comment = NA,
+  tidy.opts = list(width.cutoff = 120)
+  ) 
+sf::sf_use_s2(use_s2 = FALSE) # non-spherical geometries
+terraOptions(memfrac=0.9, tempdir = "./temp")
+```
+
+```{css, echo=FALSE, class.source = 'foldable'}
+#TOC::before {
+content: "";
+display: block;
+height: 80px;
+width: 210px;
+background-image: url(https://winrock.org/wp-content/uploads/2021/12/Winrock-logo-R.png);
+background-size: contain;
+background-position: 50% 50%;
+padding-top: 80px !important;
+background-repeat: no-repeat;
+}
+```
+
+## Project Area & Jurisdictions
+
+```{r, echo=T, message=F, warning=F, error=F, comment=NA, eval=T}
+country = sf::read_sf("./data/AOI/liberia_boundary_national.shp") |>sf::st_transform(32629)
+counties = sf::st_read("./data/AOI/places_poly_county.shp") |>sf::st_transform(32629)
+jurisdiction = counties |>dplyr::filter(name=="Grand Cape Mount County"|name=="Gharpolu County")
+jurisdiction$name = 'Grand Cape Mount & Gharpolu Counties'
+
+aoi = sf::read_sf("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/AOI/Archive/ProjectArea_CF-Expansion_051525/updated_areas.shp") |>
+  sf::st_make_valid() |>
+  sf::st_transform("EPSG:32629") |>  
+  sf::st_cast("MULTIPOLYGON") |> sf::st_as_sf() |> dplyr::select("Name")
+
+aoi$area_ha = round(as.numeric(sf::st_area(aoi) * 0.0001, 4))
+aoi |> sf::st_drop_geometry() |> janitor::adorn_totals() 
+```
+
+# Derive Leakage Area Belt
+
+```{r, message=F, warning=F, error=F, comment=NA, eval=F, out.width="50%"}
+aoi_union = sf::st_transform(aoi, 32629) |>  sf::st_union() |> sf::st_make_valid()
+leakage_buffer = sf::st_buffer(aoi_union, dist = 5500, endCapStyle="ROUND") |>
+  sf::st_as_sf()
+leakage_buffer = concaveman::concaveman(leakage_buffer, concavity=5) |> 
+  sf::st_zm() |> sf::st_make_valid()
+leakage_belt_whole = sf::st_buffer(leakage_buffer, dist = 4500, endCapStyle="ROUND") |>
+  sf::st_make_valid() 
+leakage_belt    = sf::st_difference(leakage_belt_whole, st_union(st_combine(aoi_union)))
+leakage_belt$area_ha = round(as.numeric(sf::st_area(leakage_belt) * 0.0001, 4)) 
+leakage_belt = sf::st_intersection(country, leakage_belt)
+
+tmap::tmap_mode("plot")
+tmap::tm_shape(leakage_belt_whole) + 
+  tmap::tm_polygons(col="orange",fill="orange",fill_alpha=0.3,lwd=1)+
+  #tmap::tm_add_legend(type="lines",col="orange",labels="Leakage Belt (10km)") +
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1, col="white") +
+  tmap::tm_basemap("Esri.WorldImagery")
+
+tmap::tm_shape(leakage_belt) + 
+  tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+
+  #tmap::tm_add_legend(type="lines",col="yellow",labels="Leakage Belt (10km)") +  
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.2, col="white") + 
+  tmap::tm_text(text="Name", size=0.3, col="white") +
+  tmap::tm_basemap("Esri.WorldImagery")
+
+# save locally
+#sf::wt_write(leakage_belt, "OneDrive.../20087 - RSPB Gola Feasibility/Deliverables/
+#  Spatial Data/LEAKAGE/Archive/LeakageBelt_10k-Radius_UnFiltered.zip") 
+#sf::st_write(leakage_belt_whole, "OneDrive.../20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/LEAKAGE/Archive/LeakageBelt_10k-Radius_UnFiltered-Whole.shp")
+```
+
+```{r, echo=F, message=F, warning=F, error=F, comment=NA, eval=T, out.width="50%"}
+# reload from local file to free up working memory
+leakage_belt   = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/LEAKAGE/Archive/LeakageBelt_10k-Radius_UnFiltered/leakage_belt_10km_liberia_ext.shp") 
+leakage_belt_whole   = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/LEAKAGE/Archive/LeakageBelt_10k-Radius_UnFiltered-Whole.shp") 
+leakage_belt$area_ha = round(as.numeric(sf::st_area(leakage_belt) * 0.0001, 4))
+leakage_belt$Name = "Leakage Belt 10km Radius"
+leakage_belt
+
+tmap::tmap_mode("plot")
+tmap::tm_shape(leakage_belt_whole) + 
+  tmap::tm_polygons(col="orange",fill="orange",fill_alpha=0.3,lwd=1)+
+  #tmap::tm_add_legend(type="lines",col="orange",labels="Leakage Belt (10km)") +
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1, col="white") +
+  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
+  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top")) +
+  tmap::tm_basemap("Esri.WorldImagery")
+
+tmap::tm_shape(leakage_belt) + 
+  tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+
+  #tmap::tm_add_legend(type="lines",col="yellow",labels="Leakage Belt (10km)") +  
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.2, col="white") + 
+  tmap::tm_text(text="Name", size=0.4, col="white") +
+  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
+  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top")) +
+  tmap::tm_basemap("Esri.WorldImagery")
+```
+
+
+# Derive Leakage Area Masks
+
+## Roads Mask
+
+```{r, message=F, warning=F, error=F, comment=NA, eval=F}
+roads_one = sf::st_read("~/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/ROADS/Archive/roads_simplified_one.shp")
+roads_two = sf::st_read("~/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/ROADS/Archive/roads_simplified_two.shp")
+
+# we have simplify mask shapefiles and split them up to shorten computing 
+# time & avoid crashing. See option for "harsh" simplification on line 163
+roads_one_simplified = roads_one |> sf::st_make_valid() |> sf::st_cast("MULTILINESTRING") |> 
+  rmapshaper::ms_simplify(keep=0.5)
+roads_two_simplified = roads_two |> sf::st_make_valid() |> sf::st_cast("MULTILINESTRING") |> 
+  rmapshaper::ms_simplify(keep=0.5)
+
+# bigger file needs more simplificaiotn
+roads_one_simplified_harsh = rmapshaper::ms_simplify(
+  roads_one_simplified, keep=0.01) 
+
+# now apply buffer operation, but note this takes time. Its 
+# advised processing inputs as much as possible before running
+roads_one_buffer = sf::st_buffer(
+  roads_one_simplified_harsh, 
+  dist = 10000, 
+  nQuadSegs = 5,
+  endCapStyle="ROUND", 
+  joinStyle = "ROUND",
+  mitreLimit = 1,
+  singleSide = FALSE
+  )
+
+roads_two_buffer = sf::st_buffer(
+  roads_two_simplified, 
+  dist = 10000, 
+  nQuadSegs = 5,
+  endCapStyle="ROUND", 
+  joinStyle = "ROUND",
+  mitreLimit = 1,
+  singleSide = FALSE
+  )
+
+# Combine, dissolve and cast to single feature
+roads_mask = sf::st_combine(roads_one_buffer, roads_two_buffer) |>
+  sf::st_union() |> sf::st_cast("POLYGON")
+
+# Visual check
+tmap::tmap_mode("plot")
+tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
+  tmap::tm_shape(roads_one_simplified_harsh) + tmap::tm_lines(lwd=2, col="red") +
+  tmap::tm_shape(roads_two_simplified) + tmap::tm_lines(lwd=2, col="green") +
+  tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=1, col="pink") + 
+  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
+  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top"))
+
+# Save output to MASKS folder and purge memory
+#sf::st_write(roads_mask, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/MASKS/LeakageMask_Roads_10km-Buffer_051625.shp", delete_dsn=T)
+```
+
+
+```{r, echo=F}
+roads_one = sf::st_read("~/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/ROADS/Archive/roads_simplified_one.shp")
+roads_two = sf::st_read("~/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/ROADS/Archive/roads_simplified_two.shp")
+roads_mask = sf::st_read("~/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/MASK/Archive/LeakageMask_Roads_10km-Buffer_051625/Road_Mask_10km-Proximity_051625.shp")# |> sf::st_transform(3857) 
+
+# we have simplify mask shapefiles and split them up to shorten computing 
+# time & avoid crashing. See option for "harsh" simplification on line 163
+roads_one_simplified = roads_one |> sf::st_make_valid() |> sf::st_cast("MULTILINESTRING") |> 
+  rmapshaper::ms_simplify(keep=0.5)# |> sf::st_transform(3857)
+roads_two_simplified = roads_two |> sf::st_make_valid() |> sf::st_cast("MULTILINESTRING") |> 
+  rmapshaper::ms_simplify(keep=0.5)# |> sf::st_transform(3857)
+
+# bigger file needs more simplificaiotn
+roads_one_simplified_harsh = rmapshaper::ms_simplify(
+  roads_one_simplified, keep=0.01) 
+
+# Visual check
+tmap::tmap_mode("plot")
+tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
+  tmap::tm_shape(roads_one_simplified_harsh) + tmap::tm_lines(lwd=2, col="red") +
+  tmap::tm_shape(roads_two_simplified) + tmap::tm_lines(lwd=2, col="green") +
+  tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=1, col="pink") + 
+  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
+  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top")) 
+```
+## Habitat Mask
+
+```{r, eval=T, error=F}
+# import inputs
+wetlands = terra::rast("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/HABITAT/Wetlands/GLWD_EPSG32629.tif")
+protected_areas = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/HABITAT/Protected Areas/Archive/WDPA_Mar2025_Public_32629_GOLA.shp")
+
+leakage_belt_crop = sf::st_transform(sf::st_as_sf(leakage_belt_whole), 32629) |> terra::vect()
+wetlands          = terra::crop(wetlands, leakage_belt_crop, mask=T)
+
+# tidy labeling
+code_dict_2 <- data.frame(
+  id = c(1, 4, 7, 10, 12, 14, 15, 18, 20, 21, 26, 31),
+  label = c(
+    "Freshwater lake",                              # 1
+    "Large river",                                  # 4
+    "Small streams",                                # 7
+    "Riverine, regularly flooded, forested",        # 10
+    "Riverine, seasonally flooded, forested",       # 12
+    "Riverine, seasonally saturated, forested",     # 14
+    "Riverine, seasonally saturated, non-forested", # 15
+    "Palustrine, seasonally saturated, forested",   # 18
+    "Ephemeral, forested",                          # 20
+    "Ephemeral, non-forested",                      # 21
+    "Tropical peatland, forested",                  # 26
+    "Other coastal wetland"                         # 31
+  ))
+
+levels(wetlands) <- code_dict_2
+wetlands[wetlands == 0] <- NA
+
+# derive wetland mask
+wetlands_mask <- wetlands
+wetland_classes <- c(1, 4, 7, 10, 12, 14, 15, 18, 20, 21, 26, 31)
+terra::values(wetlands_mask) <- ifelse(terra::values(wetlands) %in% wetland_classes, 1, NA)
+
+# save locally for faster computing
+#raster::writeRaster(wetlands_mask, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/MASK/LeakageMask_Wetland-GLWD_051625.tif", overwrite=T)
+#sf::st_write(protected_areas, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/MASK/LeakageMask_ProtectedAreas_WDPA_051625.shp", delete_dsn=T)
+```
+
+## Slope Mask
+
+```{r, error=F, eval=F}
+# skipping these operations here (est. time 12 mins)
+DEM = terra::rast("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/DEM/DEM_EPSG32629.tif") 
+
+# derive slope percentage from degree 
+slope_degrees = terra::terrain(DEM, v="slope", unit="degrees")
+slope_percent = tan(slope_degrees * (pi / 180)) * 100
+slope_percent = terra::clamp(slope_percent, 0, 100) 
+slope_invalid = slope_percent > 10
+slope_invalid[slope_invalid == 0] <- NA
+slope_mask = terra::as.polygons(slope_invalid, dissolve=T)|>sf::st_as_sf()|>sf::st_union()
+
+# save locally & reload
+sf::st_write(slope_mask, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/MASK/LeakageMask_Slope10%-Invalid_051625.zip", delete_dsn=T)
+slope_mask = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/MASK/Archive/LeakageMask_Slope10%-Invalid_051625/slope_poly_simplified.shp")
+
+```
+
+```{r, echo=F, eval=F}
+slope_mask = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/MASK/Archive/LeakageMask_Slope10%-Invalid_051625/slope_poly_simplified.shp")
+```
+
+## Visual Check
+
+```{r}
+# Visual check
+tmap::tmap_mode("plot")
+tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
+  tmap::tm_shape(wetlands) + tm_raster(col.legend = tm_legend("Wetlands (GLWD")) +
+  tmap::tm_shape(leakage_belt) + tm_polygons(col="yellow",fill="yellow",fill_alpha=0.4, lwd=1.5)+ 
+  tmap::tm_shape(protected_areas) + tm_polygons(fill="ORIG_NAME", fill.legend = tm_legend("Protected Areas (WDPA)")) +
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1.5, col="red") + 
+  tmap::tm_text(text="Name", size=0.3, col="black") +
+  tmap::tm_shape(roads_mask) + tmap::tm_borders(col="purple") +
+  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  tmap::tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
+  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top"))
+
+```
+
+```{r, echo=F, eval=F}
+slope_mask = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/MASK/Archive/LeakageMask_Slope10%-Invalid_051625/slope_poly_simplified.shp")
+wetlands = terra::rast("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/HABITAT/Wetlands/GLWD_EPSG32629.tif")
+protected_areas = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/HABITAT/Protected Areas/Archive/WDPA_Mar2025_Public_32629_GOLA.shp")
+
+# Visual check
+tmap::tmap_mode("plot")
+#tmap::tm_basemap("OpenStreetMap") +
+tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
+  tmap::tm_shape(wetlands) + tm_raster(col.legend = tm_legend("Wetlands (GLWD")) +
+  tmap::tm_shape(leakage_belt) + tm_polygons(col="yellow",fill="yellow",fill_alpha=0.4, lwd=1.5)+ 
+  tmap::tm_shape(protected_areas) + tm_polygons(fill="ORIG_NAME", fill.legend = tm_legend("Protected Areas (WDPA)")) +
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1.5, col="red") + 
+  tmap::tm_text(text="Name", size=0.3, col="black") +
+  tmap::tm_shape(roads_mask) + tmap::tm_borders(col="purple") +
+  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  tmap::tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
+  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top"))
+
+
+# slope filter is large file with dense linework that 
+# needs seperate mapping to visualize and slower rendering
+tmap::tm_shape(slope_mask) + tmap::tm_borders(col="purple") +
+  tmap::tm_shape(leakage_belt)) + tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+ 
+  tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.2, col="white") + 
+  tmap::tm_text(text="Name", size=0.4, col="white") +
+  tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+  tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
+  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top"))
+```
+
+# Apply Leakage Area Masks
+
+```{r, error=F, eval=F}
+# clip
+roads_leakage_mask = sf::st_intersection(leakage_belt, roads_mask)
+slope_leakage_mask = sf::st_intersection(leakage_belt, slope_mask)
+wetlands_leakage_mask = sf::st_intersection(leakage_belt, wetlands_mask)
+protected_areas_leakage_mask = sf::st_intersection(leakage_belt, protected_areas)
+
+# merge. Btw actually makes better sense to keep these seperate. 
+# They are easier to operate seperately due to their size and linework.
+leakage_mask_a = sf::st_union(roads_leakage, slope_leakage_mask)
+leakage_mask_b = sf::st_union(leakage_mask_a, wetlands_leakage_mask)
+leakage_mask_c = sf::st_union(leakage_mask_b, protected_areas_leakage_mask)
+
+# save
+sf::st_write(leakage_mask_c, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/LEAKAGE/Leakage Masks/", delete_dsn=T)
+```
+
+
+## Tally Features
+
+```{r, message=F, warning=F, error=F, comment=NA, eval=F}
+road_count_whole = sf::st_intersection(road, leakage_belt_whole)
+road_count = sf::st_intersection(road, leakage_belt)
+road_length_whole = sum(sf::st_length(road_count_whole)) + sum(sf::st_length(road_count_whole))
+road_length = sum(sf::st_length(road_count)) + sum(sf::st_length(road_count))
+road_length_whole
+road_length
+
+waterways_count_whole = sf::st_intersection(waterways, leakage_belt_whole)
+waterways_count = sf::st_intersection(waterways, leakage_belt)
+waterways_length_whole = sum(sf::st_length(waterways_count_whole))
+waterways_length = sum(sf::st_length(waterways_count))
+waterways_length_whole
+waterways_length
+
+places_count_whole = sf::st_intersection(places, leakage_belt_whole)
+places_count = sf::st_intersection(places, leakage_belt)
+places_count_whole
+places_count
+```
+
+
