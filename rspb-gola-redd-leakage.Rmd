@@ -26,7 +26,7 @@ output:
     toc: true
     toc_depth: 6
     toc_float: true
-    css: styles.scss
+    css: toc-styles.css
     self_contained: true
     highlight: pygments
 ---

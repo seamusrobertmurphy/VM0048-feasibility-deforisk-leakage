@@ -1,7 +1,7 @@
 /* This hack is needed to temporary disable the predefined layout style */
-d-article {
-    contain: none;
-  }
+/*d-article {
+/*    contain: none;
+/*  }
   
 .d-contents nav h3 {
     text-indent: 25px;
@@ -20,27 +20,26 @@ d-article {
   }
   
 /* Sidebar Navigation */
-/* #TOC {
+#TOC {
   opacity: 1;
   position: fixed;
   left: calc(7%);
   top: calc(5.5%);
-  /* width: 20%; */
-/*   max-width: 260px;
+  width: 20%; */
+  max-width: 260px;
   max-height: 85%;
   overflow-y: auto;
-  background: white;            /* Optional, remove to enable the blur filter (just for fun). */
-/*   backdrop-filter: blur(10px);  /* Optional, wouldn't not work with Firefox browser. */
-/*   padding: 10px;                /* Optional */
-  /* border-right: 1px solid rgba(0, 0, 0, 0.1); */
-/*   border: 1px solid rgba(0, 0, 0, 0.1);
-  /* border-radius: 1px; */
-/*   transition: all 0.5s;   
-/*   z-index: 999;
-/*   }
+  background: white;          
+  backdrop-filter: blur(10px); 
+  border-right: 1px solid rgba(0, 0, 0, 0.1); */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 1px; */
+  transition: all 0.5s;   
+  z-index: 999;
+  }
 
 /* Hide the TOC when resized to mobile or tablet:  480px, 768px, 900px */
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 480px) {
   #TOC {
       position: relative;
       left: 0;
@@ -61,30 +60,25 @@ d-article {
   transition: visibility 0s linear 0.5s, opacity 0.5s;
   }
 
-/* Optional, remove to disable the hover effect */
-/*#TOC:hover {
-/*  opacity: 1;
-/*  transition: all 0.5s;
-/*  }
-
 
 /* CSS Font Defaults */
 $body-bg: white;
 $body-color: black;
 $link-color: #75AADB;
 $code-block-bg-alpha: -.8;
-//$code-block-bg: #f0f0f0;
-//$code-block-border-left: #bcb8b6;
-$code-block-bg: #160941;
-$code-block-border-left: #2d1283;
-
-$font-family-sans-serif: "Source Sans Pro", -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+$code-block-bg: #f0f0f0;
+$code-block-border-left: #bcb8b6;
+$font-family-sans-serif: "Source Sans Pro", -apple-system, "system-ui", "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 $font-size-root: 14px;
 $toc-font-size: 10px;
 
 h1, h2, h3, h4, h5, h6 {
-  font-weight: norm;
+  font-weight: normal;
   margin-top: 30px;
 }
 
-//  text-shadow: -0.8px -0.8px 0 rgba(0, 0, 0, .3);
+/*$code-block-bg: #160941;
+/*$code-block-border-left: #2d1283;
+
+
+
