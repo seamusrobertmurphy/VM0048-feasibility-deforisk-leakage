@@ -22,11 +22,11 @@ author:
     affiliation_url: https://winrock.org/            
 date: "`r Sys.Date()`"
 output:
-  distill::distill_article:
+  html_document:
     toc: true
     toc_depth: 6
     toc_float: true
-    css: toc-styles.css
+    css: styles.scss
     self_contained: true
     highlight: pygments
 ---
@@ -64,6 +64,7 @@ library(tinytex)
 library(tmap)
 library(tmaptools)
 library(xaringan)
+library(xaringanExtra)
 
 base::options(htmltools.dir.version = F, htmltools.preserve.raw = F)
 knitr::opts_chunk$set(
@@ -81,6 +82,14 @@ terraOptions(memfrac=0.9, tempdir = "./temp")
 <!-- TOC HTML ELEMENTS -->
 
 <input type="button" class="d-article-with-toc" id="TOC" value="&#x2630" title="Toggle (Hide/Show) Table of Contents" alt="Toggle button for hiding/showing the Table of Contents" onclick="toggle()" style="padding:7px; border: 0px;"/>
+
+```{r panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+
+::::: {.panelset}
+::: {.panel}
+
 
 ## Project Area & Jurisdictions
 
@@ -102,6 +111,9 @@ aoi |> sf::st_drop_geometry() |> janitor::adorn_totals() |>
   flextable::autofit()
 ```
 
+:::  
+
+::: {.panel}
 # Derive Leakage Area Belt
 
 ```{r, message=F, warning=F, error=F, comment=NA, eval=F}
@@ -172,7 +184,11 @@ tmap::tm_shape(leakage_belt) +
   tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top")) +
   tmap::tm_basemap("Esri.WorldImagery")
 ```
+::: 
+:::::  
 
+::::: {.panelset}
+::: {.panel}  
 # Derive Leakage Area Masks
 
 ## Roads Mask

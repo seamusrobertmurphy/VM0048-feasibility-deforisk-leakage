@@ -1,11 +1,3 @@
-/* Global Font and Color Definitions */
-body {
-  font-family: "Source Sans Pro", -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  font-size: 14px;
-  color: black;
-  background-color: white;
-}
-
 /* This hack is needed to temporary disable the predefined layout style */
 d-article {
     contain: none;
@@ -17,8 +9,8 @@ d-article {
 
 /* ScrollSpy active styles (see JAVASCRIPT tab for activation) */
 .d-contents nav ul li.active > a { 
-    font-weight: normal;  
-    border-left: 1px solid #2780e3; 
+    font-weight: bold;  
+    /* border-left: 1px solid #2780e3; */
     color: #0f2e3d !important;
   }
 
@@ -33,86 +25,45 @@ d-article {
   position: fixed;
   left: calc(7%);
   top: calc(5.5%);
-  width: 20%; 
+  /* width: 20%; */
   max-width: 260px;
   max-height: 85%;
   overflow-y: auto;
-  background: white;          
-  backdrop-filter: blur(10px); 
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  background: white;            /* Optional, remove to enable the blur filter (just for fun). */
+  backdrop-filter: blur(10px);  /* Optional, wouldn't not work with Firefox browser. */
+  padding: 10px;                /* Optional */
+  /* border-right: 1px solid rgba(0, 0, 0, 0.1); */
   border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 1px; 
+  /* border-radius: 1px; */
   transition: all 0.5s;   
   z-index: 999;
   }
 
-/* Hide the TOC when resized to mobile or tablet:  480px, 768px, 900px */
-@media screen and (max-width: 480px) {
-  #TOC {
-      position: relative;
-      left: 0;
-      top: 0;
-      max-width: none;
-      max-height: none;
-      overflow-y: auto;
-      border: none;
-      background: none; }
-      .d-contents nav h4 {
-        text-indent: 0; }
-      input[type="button" i] {  
-        display: none; }
-    }
-  
 #TOC.hide { 
-  opacity: 1;
+  opacity: 0;
   transition: visibility 0s linear 0.5s, opacity 0.5s;
   }
 
+/* Optional, remove to disable the hover effect */
+#TOC:hover {
+  opacity: 1;
+  transition: all 0.5s;
+  }
 
-#TOC, .d-contents nav, .d-contents nav ul li, .d-contents nav ul li a {
-  font-size: 12px;
-}
-
-
-h1, h2, h3, h4, h5, h6 {
-  font-weight: semi-bold;
-  margin-top: 30px;
-}
-
-/* Disable hover pointer-events to prevent blocking underlying layers */
-#TOC:hover, 
-.d-contents nav:hover, 
-.d-contents nav ul li:hover, 
-.d-contents nav ul li a:hover {
-  pointer-events: none !important;
-}
-
-/* Limit width of code chunks and console outputs */
-pre, code, .code-output, .sourceCode, pre.sourceCode {
-  max-width: 100%;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-/* Expand width of central markdown content panel */
-d-article {
-  max-width: 120% !important; /* Adjust percentage as needed */
-  width: 120% !important;
-}
-
-/* Increase width and height of rendered output images */
-img, .figure, figure img {
-  max-width: 120% !important;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-}
-
-
-/* Custom Font for Title "Leakage Belt Delineation" */
-h1.title {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-  font-weight: bold !important;
-  font-size: 2.5rem !important; /* Adjust size as needed */
-}
+/* Hide the TOC when resized to mobile or tablet:  480px, 768px, 900px */
+@media screen and (max-width: 1000px) {
+#TOC {
+    position: relative;
+    left: 0;
+    top: 0;
+    max-width: none;
+    max-height: none;
+    overflow-y: auto;
+    border: none;
+    background: none; }
+    .d-contents nav h3 {
+      text-indent: 0; }
+    input[type="button" i] {  
+      display: none; }
+  }
+  
