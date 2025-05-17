@@ -1,23 +1,26 @@
 ---
-title: 'VM0048: Leakage Belt Delineation'
-author: "Winrock Intl"
-date: "2025-05-16"
-output: 
-  html_document: 
-    css: styles.scss
-    theme: "united"
-    highlight: pygments
-    code_folding: show
-    toc: true
-    toc_depth: 2
-    toc_float: 
-      collapsed: false
-    fig_width: 12
-    fig_height: 8
-
-editor_options: 
-  markdown: 
-    wrap: 120
+title: 'Leakage Belt Delineation'
+description: |
+  Annotated script used to derive a VM0048-compliant leakage area for the Gola REDD+ Forest Carbon Project
+author:
+  - name: Seamus Murphy 
+    url: Seamus.Murphy@winrock.org
+    affiliation: Winrock International
+    affiliation_url: https://winrock.org/
+  - name: Krysla Lima Fernandes 
+    url: Seamus.Murphy@winrock.org
+    affiliation: Winrock International
+    affiliation_url: https://winrock.org/
+  - name: Rajesh Bista
+    url: Rajesh.Bista@winrock.org
+    affiliation: Winrock International
+    affiliation_url: https://winrock.org/
+  - name: Meyru Bhanti 
+    url: Meyru.Bhanti@winrock.org
+    affiliation: Winrock International
+    affiliation_url: https://winrock.org/            
+date: "`r Sys.Date()`"
+output: distill::distill_article
 ---
 
 ```{r, echo=F, message=F, warning=F, error=F, comment=NA}

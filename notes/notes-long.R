@@ -1104,3 +1104,27 @@ Valid themes include default, bootstrap, cerulean, cosmo, darkly, flatly, journa
 
 
 highlight specifies the syntax highlighting style. Supported styles include default, tango, pygments, kate, monochrome, espresso, zenburn, haddock, breezedark, and textmate. Pass null to prevent syntax highlighting.
+
+
+
+---
+title: 'VM0048: Leakage Belt Delineation'
+author: "Winrock Intl"
+date: "2025-05-16"
+output: 
+  html_document: 
+    css: styles.scss
+    theme: "united"
+    highlight: pygments
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float: 
+      collapsed: false
+    fig_width: 12
+    fig_height: 8
+
+editor_options: 
+  markdown: 
+    wrap: 120
+---
