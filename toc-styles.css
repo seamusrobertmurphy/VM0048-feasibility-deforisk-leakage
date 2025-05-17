@@ -108,3 +108,11 @@ img, .figure, figure img {
   height: auto;
   object-fit: contain;
 }
+
+
+/* Custom Font for Title "Leakage Belt Delineation" */
+h1.title {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-weight: bold !important;
+  font-size: 2.5rem !important; /* Adjust size as needed */
+}
