@@ -1,7 +1,7 @@
 /* This hack is needed to temporary disable the predefined layout style */
-/*d-article {
-/*    contain: none;
-/*  }
+d-article {
+    contain: none;
+  }
   
 .d-contents nav h3 {
     text-indent: 25px;
