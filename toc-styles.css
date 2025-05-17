@@ -66,3 +66,13 @@ d-article {
     input[type="button" i] {  
       display: none; }
   }
+
+
+/* CSS Font Defaults */
+
+$body-bg: white;
+$body-color: black;
+$link-color: #75AADB;
+$code-block-bg-alpha: -.8;
+$code-block-bg: #f0f0f0;
+$code-block-border-left: #bcb8b6;
