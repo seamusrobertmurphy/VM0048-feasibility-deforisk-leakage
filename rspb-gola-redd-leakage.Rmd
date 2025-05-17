@@ -31,37 +31,6 @@ output:
     highlight: pygments
 ---
 
-<!-- TOC JAVASCRIPT ELEMENTS -->
-<script>
-function toggle () {
-  document.getElementById("TOC").classList.toggle("hide");
-};
-
-window.addEventListener('DOMContentLoaded', () => {
-
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      const id = entry.target.getAttribute('id');
-      if (entry.intersectionRatio > 0) {
-        document.querySelector(`[href="#${id}"]`).parentElement.classList.add('active');
-      } else {
-        document.querySelector(`[href="#${id}"]`).parentElement.classList.remove('active');
-      }
-    });
-  });
-
-  // Track all headings that have an `id` applied
-  document.querySelectorAll('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').forEach((h1, h2, h3, h4, h5, h6) => {
-    observer.observe(h1, h2, h3, h4, h5, h6);
-  });
-  
-});
-</script>
-
-<!-- TOC HTML ELEMENTS -->
-<input type="button" class="d-article-with-toc" id="TOC" value="&#x2630" title="Toggle (Hide/Show) Table of Contents" alt="Toggle button for hiding/showing the Table of Contents" onclick="toggle()" style="padding:7px; border: 0px;"/>
-
-
 
 ```{r, echo=F, message=F, warning=F, error=F, comment=NA}
 readRenviron("~/.Renviron")
@@ -109,6 +78,9 @@ knitr::opts_chunk$set(
 sf::sf_use_s2(use_s2 = FALSE) # non-spherical geometries
 terraOptions(memfrac=0.9, tempdir = "./temp")
 ```
+
+<!-- TOC HTML ELEMENTS -->
+<input type="button" class="d-article-with-toc" id="TOC" value="&#x2630" title="Toggle (Hide/Show) Table of Contents" alt="Toggle button for hiding/showing the Table of Contents" onclick="toggle()" style="padding:7px; border: 0px;"/>
 
 
 ## Project Area & Jurisdictions
