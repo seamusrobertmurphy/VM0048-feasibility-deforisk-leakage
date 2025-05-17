@@ -1128,3 +1128,35 @@ editor_options:
   markdown: 
     wrap: 120
 ---
+
+
+
+output: 
+  distill::distill_article
+    code_folding: show
+    toc: true
+    toc_depth: 2
+    toc_float: 
+        collapsed: false
+    fig_width: 12
+    fig_height: 8
+
+editor_options: 
+  markdown: 
+    wrap: 120
+
+
+
+  ```{css, echo=FALSE, class.source = 'foldable'}
+  #TOC::before {
+  content: "";
+  display: block;
+  height: 55px;
+  width: 180px;
+  background-image: url(https://winrock.org/wp-content/uploads/2021/12/Winrock-logo-R.png);
+  background-size: contain;
+  background-position: 50% 50%;
+  padding-top: 80px !important;
+  background-repeat: no-repeat;
+  }
+  ```

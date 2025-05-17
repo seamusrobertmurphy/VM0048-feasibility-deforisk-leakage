@@ -1,14 +1,15 @@
 ---
 title: 'Leakage Belt Delineation'
 description: |
-  Annotated script used to derive a VM0048-compliant leakage area for the Gola REDD+ Forest Carbon Project
+  VM0048-compliant delineation of valid leakage area for the Gola REDD+ Forest Carbon Project project area expansion
 author:
   - name: Seamus Murphy 
-    url: Seamus.Murphy@winrock.org
+    url: mailto:Seamus.Murphy@winrock.org
     affiliation: Winrock International
     affiliation_url: https://winrock.org/
+    orcid_id: 0000-0002-1792-0351
   - name: Krysla Lima Fernandes 
-    url: Seamus.Murphy@winrock.org
+    url: mailto:Krysla.Lima@winrock.org
     affiliation: Winrock International
     affiliation_url: https://winrock.org/
   - name: Rajesh Bista
@@ -20,12 +21,52 @@ author:
     affiliation: Winrock International
     affiliation_url: https://winrock.org/            
 date: "`r Sys.Date()`"
-output: distill::distill_article
+output:
+  distill::distill_article:
+    toc: true
+    toc_depth: 6
+    toc_float: true
+    css: styles.css
+    self_contained: true
+    highlight: pygments
 ---
+
+<!-- TOC JAVASCRIPT ELEMENTS -->
+<script>
+function toggle () {
+  document.getElementById("TOC").classList.toggle("hide");
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const id = entry.target.getAttribute('id');
+      if (entry.intersectionRatio > 0) {
+        document.querySelector(`[href="#${id}"]`).parentElement.classList.add('active');
+      } else {
+        document.querySelector(`[href="#${id}"]`).parentElement.classList.remove('active');
+      }
+    });
+  });
+
+  // Track all headings that have an `id` applied
+  document.querySelectorAll('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').forEach((h1, h2, h3, h4, h5, h6) => {
+    observer.observe(h1, h2, h3, h4, h5, h6);
+  });
+  
+});
+</script>
+
+<!-- TOC HTML ELEMENTS -->
+<input type="button" class="d-article-with-toc" id="TOC" value="&#x2630" title="Toggle (Hide/Show) Table of Contents" alt="Toggle button for hiding/showing the Table of Contents" onclick="toggle()" style="padding:7px; border: 0px;"/>
+
+
 
 ```{r, echo=F, message=F, warning=F, error=F, comment=NA}
 readRenviron("~/.Renviron")
 options(repos = c(CRAN = "https://cloud.r-project.org"))
+#styling notes - theme list
 #bootstrap, cerulean, cosmo, darkly, flatly, journal, lumen, paper, readable, sandstone, simplex, spacelab, united, and yeti
 
 library(cols4all)
@@ -63,25 +104,12 @@ knitr::opts_chunk$set(
   warning = FALSE,
   error   = FALSE, 
   comment = NA,
-  tidy.opts = list(width.cutoff = 120)
+  tidy.opts = list(width.cutoff = 80)
   ) 
 sf::sf_use_s2(use_s2 = FALSE) # non-spherical geometries
 terraOptions(memfrac=0.9, tempdir = "./temp")
 ```
 
-```{css, echo=FALSE, class.source = 'foldable'}
-#TOC::before {
-content: "";
-display: block;
-height: 55px;
-width: 180px;
-background-image: url(https://winrock.org/wp-content/uploads/2021/12/Winrock-logo-R.png);
-background-size: contain;
-background-position: 50% 50%;
-padding-top: 80px !important;
-background-repeat: no-repeat;
-}
-```
 
 ## Project Area & Jurisdictions
 
@@ -144,7 +172,7 @@ leakage_belt = sf::st_intersection(country, leakage_belt)
 
 tmap::tmap_mode("view")
 tmap::tm_shape(leakage_belt) + 
-  tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+
+  tmap::tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+
   #tmap::tm_add_legend(type="lines",col="yellow",labels="Leakage Belt (10km)") +  
   tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.4, col="white") + 
   tmap::tm_text(text="Name", size=0.5, col="white") +
@@ -164,7 +192,7 @@ leakage_belt
 
 tmap::tmap_mode("view")
 tmap::tm_shape(leakage_belt) + 
-  tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+
+  tmap::tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+
   #tmap::tm_add_legend(type="lines",col="yellow",labels="Leakage Belt (10km)") +  
   tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.4, col="white") + 
   tmap::tm_text(text="Name", size=0.5, col="white") +
@@ -335,9 +363,9 @@ slope_mask = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInt
 # Visual check
 tmap::tmap_mode("view")
 tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
-  tmap::tm_shape(wetlands) + tm_raster(col.legend = tm_legend("Wetlands (GLWD")) +
-  tmap::tm_shape(leakage_belt) + tm_polygons(col="yellow",fill="yellow",fill_alpha=0.4, lwd=1.5)+ 
-  tmap::tm_shape(protected_areas) + tm_polygons(fill="ORIG_NAME", fill.legend = tm_legend("Protected Areas (WDPA)")) +
+  tmap::tm_shape(wetlands) + tmap::tm_raster(col.legend = tm_legend("Wetlands (GLWD")) +
+  tmap::tm_shape(leakage_belt) + tmap::tm_polygons(col="yellow",fill="yellow",fill_alpha=0.4, lwd=1.5)+ 
+  tmap::tm_shape(protected_areas) + tmap::tm_polygons(fill="ORIG_NAME", fill.legend = tm_legend("Protected Areas (WDPA)")) +
   tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1.5, col="red") + 
   tmap::tm_text(text="Name", size=0.3, col="black") +
   tmap::tm_shape(roads_mask) + tmap::tm_borders(col="purple") +
@@ -356,9 +384,9 @@ protected_areas = sf::st_read("/Users/seamus/Library/CloudStorage/OneDrive-Winro
 tmap::tmap_mode("view")
 #tmap::tm_basemap("OpenStreetMap") +
 tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
-  tmap::tm_shape(wetlands) + tm_raster(col.legend = tm_legend("Wetlands (GLWD")) +
-  tmap::tm_shape(leakage_belt) + tm_polygons(col="yellow",fill="yellow",fill_alpha=0.4, lwd=1.5)+ 
-  tmap::tm_shape(protected_areas) + tm_polygons(fill="ORIG_NAME", fill.legend = tm_legend("Protected Areas (WDPA)")) +
+  tmap::tm_shape(wetlands) + tmap::tm_raster(col.legend = tm_legend("Wetlands (GLWD")) +
+  tmap::tm_shape(leakage_belt) + tmap::tm_polygons(col="yellow",fill="yellow",fill_alpha=0.4, lwd=1.5)+ 
+  tmap::tm_shape(protected_areas) + tmap::tm_polygons(fill="ORIG_NAME", fill.legend = tm_legend("Protected Areas (WDPA)")) +
   tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1.5, col="red") + 
   tmap::tm_text(text="Name", size=0.3, col="black") +
   tmap::tm_shape(roads_mask) + tmap::tm_borders(col="purple") +
@@ -369,7 +397,7 @@ tmap::tm_shape(roads_mask) + tmap::tm_borders(lwd=0) +
 # slope filter is large file with dense linework that 
 # needs seperate mapping to visualize and slower rendering
 tmap::tm_shape(slope_mask) + tmap::tm_borders(col="purple") +
-  tmap::tm_shape(leakage_belt)) + tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+ 
+  tmap::tm_shape(leakage_belt)) + tmap::tm_polygons(col="yellow",fill="yellow",fill_alpha=0.3)+ 
   tmap::tm_shape(aoi) + tmap::tm_borders(lwd=0.2, col="white") + 
   tmap::tm_text(text="Name", size=0.4, col="white") +
   #tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
