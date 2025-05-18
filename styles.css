@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* This hack temporarily disables predefined layout style */
+d-article { contain: none; }
+
+/* ---------- disabling Distill defaults ----------------- */
+@media (min-width: 1100px) {           /* desktop only */
+  .l-body, .l-page,                    /* main column   */
+  .l-body-outset, .l-page-outset {     /* outset variants */
+    max-width: 1200px !important;      /* ← pick any width */
+    width: 100% !important;            /* let it expand   */
+  }
+}
+
+/* Sidebar Navigation */
+#TOC {
+  opacity: 1;
+  position: fixed;
+  left: calc(3%);
+  top: calc(3%);
+  max-width: 260px;
+  max-height: 85%;
+  overflow-y: auto;
+  background: white;            
+  padding: 5px;
+  border: 5px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.5s;   
+  z-index: 999;
+  }
+
+/* Hide the TOC when resized to mobile or tablet:  480px, 768px, 900px */
+@media screen and (max-width: 1100px) {
+#TOC {
+    position: relative;
+    left: 0;
+    top: 0;
+    max-width: none;
+    max-height: none;
+    overflow-y: auto;
+    border: none;
+    background: none; }
+    .d-contents nav h4 {
+      text-indent: 0; }
+    input[type="button" i] {  
+      display: none; }
+  }
+
+/* ---- Floating TOC styling -------- */
+.d-contents nav h3               { text-indent: 5px; }
+.d-contents nav ul li.active > a { font-weight: 800; color:#0f2e3d  !important; }
+.d-contents nav a                { transition: all .1s ease-in-out; }
+
+/* images auto-fit to wide screenws */
+.d-article img,
+.d-article .figure > img,
+.d-article figure img {
+  display: block;
+  width: auto !important;   
+  height: auto !important;
+}
+
+/* ---- General Typography ---------------------------- */
+body        { font-family:'Roboto',sans-serif; font-size:12px; color:#000; }
+h1.title    { font-family:'Roboto',sans-serif; font-weight:700; font-size:2rem; }
+h1,h2,h3,h4,h5,h6 { font-family:'Roboto',sans-serif; font-weight:600; margin-top:30px; }
+
+/* ---- Code/chunk styling and wrapping ------------------- */
+div.sourceCode pre,         
+pre.sourceCode,             
+pre, code {                 
+  max-width: 100%;
+  overflow-x: auto;         
+  white-space: pre-wrap !important;  
+  word-break: break-word !important; 
+}
+
+pre code {
+  font-size: 10px !important;
+  white-space: inherit !important; 
+}
