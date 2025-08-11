@@ -6,6 +6,7 @@ output:
   word_document:
   keep_md: TRUE
   toc: FALSE
+  toc_depth: 4
 always_allow_html: TRUE
 bibliography: references.bib
 editor_options: 
@@ -1084,7 +1085,12 @@ LULC_LIBERIA_2019=terra::rast("./data/LULC/LULC_LIBERIA_2019-01-02.tif")
 LULC_LIBERIA_2024=terra::rast("./data/LULC/LULC_LIBERIA_2024-01-16.tif")
 
 code_dict <- data.frame(id = c(1, 2, 3, 4, 5, 6, 7),
-  label = c("Bareground", "Cropland", "Forest", "Shrubland", "Wetland", "Urban", "Water"))
+  label = c(
+    "Bareground", "Cropland", 
+    "Forest", "Shrubland", 
+    "Wetland", "Urban", 
+    "Water"))
+
 levels(LULC_LIBERIA_2014) <- code_dict
 levels(LULC_LIBERIA_2019) <- code_dict
 levels(LULC_LIBERIA_2024) <- code_dict
@@ -2982,8 +2988,10 @@ tmap::tm_shape(jurisdiction) + tmap::tm_borders(lwd=0) +
   tmap::tm_add_legend(type="symbols", col="orange", labels = "Communities") +
   tmap::tm_shape(jurisdiction) + tmap::tm_borders(col="red", lwd=2)
 
-```
 
+  #leave buckets for iterative procedures in this step, assuming revision in mapping
+
+```
 
 ```{r, eval=F}
 places_a = sf::st_read("./data/POP/places_points.shp") |> sf::st_intersection(aoi) |> dplyr::select(name)

@@ -1,17 +1,20 @@
 ---
-title: "VM0048: Expanded Deforestation" 
-subtitle: "Baseline Deforestation in Surrounding Community Forests 2013-2023"
+title: "84 Forest Area Correction Factors" 
+subtitle: "Correction Factors for 28 Sites Derived Between RSPB Layer of 2019 and 3 Datasets Used to Classify Forest and Non-Forest Landcovers Surrounding the Gola National Forest REDD+ Carbon Project"
 author:
   - Winrock International^[krysla.lima@winrock.org, seamus.murphy@winrock.org]
 date: "2025-05-13"
 output: 
-  word_document:
+  html_document:
   keep_md: TRUE
-  toc: FALSE
+  toc: TRUE
+  toc_depth: 4
+  highlight: pygments
+
 always_allow_html: TRUE
 editor_options: 
   markdown: 
-    wrap: 80
+    wrap: 100
 ---
 
 ```{r, echo=F, message=F, warning=F, error=F, comment=NA}
@@ -99,7 +102,10 @@ library(tmap)
 library(tmaptools)
 
 
-base::options(htmltools.dir.version = F, htmltools.preserve.raw = F)
+base::options(
+  htmltools.dir.version = F, 
+  htmltools.preserve.raw = F
+  )
 
 knitr::opts_chunk$set(
   echo    = TRUE, 
@@ -107,7 +113,9 @@ knitr::opts_chunk$set(
   warning = FALSE,
   error   = FALSE, 
   comment = NA,
-  tidy.opts = list(width.cutoff = 120)
+  tidy.opts = list(width.cutoff = 120),
+  fig.width  = 14,
+  fig.height = 10
   ) 
 
 sf::sf_use_s2(use_s2 = FALSE) # non-spherical geometries
@@ -130,9 +138,11 @@ terraOptions(memfrac=0.9, tempdir = "./temp")
   }
 ```
 
+## Import AOI
+
 ```{r, eval=T, class.source = c("numCode", "r", "numberLines"), cache=T}
 set.seed(77777)
-# Import project aoi
+# Import aoi
 aoi = sf::read_sf("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Spatial Data/AOI/Archive/ProjectArea_CF-Expansion_051525/updated_areas.shp") |>
   sf::st_make_valid() |>  # Fix geometry
   sf::st_transform("EPSG:32629") |>  # Match the raster CRS 
@@ -142,66 +152,215 @@ aoi = sf::read_sf("/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternatio
 aoi$total_ha = round(as.numeric(sf::st_area(aoi) * 0.0001, 4))
 voi = terra::vect(aoi)
 
-FOREST_COUNTY_2013  = terra::rast("./data/LULC/FOREST_COUNTY_2013.tif") |> terra::project("EPSG:32629")
-FOREST_COUNTY_2023  = terra::rast("./data/LULC/FOREST_COUNTY_2023.tif") |> terra::project("EPSG:32629")
-FOREST_PROJECT_2013 = terra::crop(FOREST_COUNTY_2013, voi, mask=T)
-FOREST_PROJECT_2023 = terra::crop(FOREST_COUNTY_2023, voi, mask=T)
-
-FOREST_BINARY_2013 = terra::classify(FOREST_PROJECT_2013, 
-  rcl=matrix(c(-Inf, 0.5, 0,0.5, Inf, 1),ncol=3,byrow=TRUE))
-FOREST_BINARY_2023 = terra::classify(FOREST_PROJECT_2023, 
-  rcl = matrix(c(-Inf, 0.5, 0,0.5, Inf, 1),ncol=3,byrow=TRUE))
-CHANGE_RASTER <- (FOREST_BINARY_2013 * 10) + FOREST_BINARY_2023
-
-CHANGE_RASTER_RECLASS <- terra::classify(CHANGE_RASTER, 
-                           rcl = matrix(c(0, 0,   # Stable non-forest stays 0
-                                          10,1,   # Forest loss becomes 1
-                                          11,2),  # Stable forest becomes 2
-                                          ncol=2, byrow=TRUE)) |> as.factor()
-
-terra::freq(CHANGE_RASTER_RECLASS)
-
-# Then extract
-sum2013 = terra::extract(FOREST_PROJECT_2013, voi, fun = sum, na.rm = TRUE)
-
-# Set labels clearly:
-levels(CHANGE_RASTER_RECLASS) <- data.frame(
-  value = c(0, 1, 2),
-  label = c("Stable Non-forest", "Forest Loss", "Stable Forest")
-)
-terra::freq(CHANGE_RASTER_RECLASS)
+# Area check
+aoi |> sf::st_drop_geometry() |> janitor::adorn_totals() |> 
+  flextable::flextable() |> 
+  flextable::fontsize(size=8,part="all") |> 
+  flextable::autofit() 
 ```
 
-<div>
+## Import LULC Data
 
-</div>
+```{r, eval=T, class.source = c("numCode", "r", "numberLines"), cache=T, quiet=T}
+# Import LULC rasters
+LULC_HANSEN_2013  = terra::rast("./data/LULC/LULC_HANSEN_2013.tif") |> 
+  terra::project("EPSG:32629")
+LULC_HANSEN_2019  = terra::rast("./data/LULC/LULC_HANSEN_2019.tif") |> 
+  terra::project("EPSG:32629")
+LULC_HANSEN_2023  = terra::rast("./data/LULC/LULC_HANSEN_2023.tif") |> 
+  terra::project("EPSG:32629")
+LULC_WINROCK_2014  = terra::rast("./data/LULC/LULC_WINROCK_2024-01-16.tif") |> 
+  terra::project("EPSG:32629")
+LULC_WINROCK_2019  = terra::rast("./data/LULC/LULC_WINROCK_2019-01-02.tif") |> 
+  terra::project("EPSG:32629")
+LULC_WINROCK_2024  = terra::rast("./data/LULC/LULC_WINROCK_2024-01-16.tif") |> 
+  terra::project("EPSG:32629")
+LULC_ESRI_2017=terra::rast("./data/LULC/LULC_ESRI_2017.tif") |> 
+  terra::project("EPSG:32629")
+LULC_ESRI_2023=terra::rast("./data/LULC/LULC_ESRI_2023.tif") |> 
+  terra::project("EPSG:32629")
+LULC_RSPB_2019  = terra::rast("./data/LULC/LULC_RSPB_2019.tif") |> 
+  terra::project("EPSG:32629") # penny gardner layer
 
-```{r, eval=F, class.source = c("numCode", "r", "numberLines"), cache=T}
-tmap::tmap_mode("plot")
-tmap::tm_shape(CHANGE_RASTER_RECLASS) +
-  tm_raster(
-    palette = c("yellow", "red", "forestgreen"),
-    style = "cat",
-    title = "Forest Change  (2013–2023)",
-    labels = c("Stable Non-forest", "Forest Loss", "Stable Forest")
-  ) +
+LULC_HANSEN_2013 = terra::crop(LULC_HANSEN_2013, voi, mask=T)
+LULC_HANSEN_2019 = terra::crop(LULC_HANSEN_2019, voi, mask=T)
+LULC_HANSEN_2023 = terra::crop(LULC_HANSEN_2023, voi, mask=T)
+LULC_WINROCK_2014 = terra::crop(LULC_WINROCK_2014, voi, mask=T)
+LULC_WINROCK_2019 = terra::crop(LULC_WINROCK_2019, voi, mask=T)
+LULC_WINROCK_2024 = terra::crop(LULC_WINROCK_2024, voi, mask=T)
+LULC_ESRI_2017 = terra::crop(LULC_ESRI_2017, voi, mask=T)
+LULC_ESRI_2023 = terra::crop(LULC_ESRI_2023, voi, mask=T)
+LULC_RSPB_2019 = terra::crop(LULC_RSPB_2019, voi, mask=T)
+
+# Raster dictionaries
+code_dict_winrock_lulc <- data.frame(
+  value = c(1, 2, 3, 4, 5, 6, 7),
+  label = c(
+    "Bareground", 
+    "Cropland", 
+    "Forest", 
+    "Shrubland", 
+    "Wetland", 
+    "Urban", 
+    "Water")
+  )
+
+code_dict_esri_lulc <- data.frame(
+  id = c(1, 2, 4, 5, 7, 10, 11),  
+  label = c(
+    "Water", 
+    "Forest", 
+    "Wetland", 
+    "Bareground",
+    "Built", 
+    "Cropland", 
+    "Rangeland")
+  )
+
+code_dict_rspb_lulc <- data.frame(
+  value = c(0, 1, 2, 3, 4, 5, 6, 7),
+  label = c(
+    "Bareground", 
+    "Regrowth", 
+    "Farmbush", 
+    "Natural Forest", 
+    "Water", 
+    "Swamp", 
+    "Cocoa",
+    "Oil Palm")
+  )
+
+code_dict_hansen_lulc <- data.frame(
+  value = c(0, 1),
+  label = c(
+    "Non-Forest", 
+    "Forest")
+  )
+
+levels(LULC_HANSEN_2013) <- code_dict_hansen_lulc
+levels(LULC_HANSEN_2019) <- code_dict_hansen_lulc
+levels(LULC_HANSEN_2023) <- code_dict_hansen_lulc
+levels(LULC_WINROCK_2014) <- code_dict_winrock_lulc
+levels(LULC_WINROCK_2019) <- code_dict_winrock_lulc
+levels(LULC_WINROCK_2024) <- code_dict_winrock_lulc
+levels(LULC_ESRI_2017) <- code_dict_esri_lulc
+levels(LULC_ESRI_2023) <- code_dict_esri_lulc
+levels(LULC_RSPB_2019) <- code_dict_rspb_lulc
+```
+
+## Visualize LULC Data
+
+```{r, eval=T, class.source = c("numCode", "r", "numberLines"), cache=T}
+tmap::tmap_mode("view")
+tmap::tm_shape(LULC_HANSEN_2019) +
+  tm_raster(col.legend = tm_legend("Hansen, 2019")) +
+  tm_shape(aoi) + tm_borders(col="black", lwd=1) + 
+  tm_text("Name", size = 0.5) +
+  tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = 0.6) +
+  tm_basemap("Esri.WorldImagery") -> tm1
+
+tmap::tm_shape(LULC_WINROCK_2019) +
+  tm_raster(col.legend = tm_legend("Winrock, 2019")) +
   tm_shape(aoi) + tm_borders(col="black", lwd=1) +
-    tm_text("Name", col = "Name", size = 0.5) +
-    tm_graticules(lines = TRUE, labels.rot = c(0,90), lwd = 0.2) +
+    tm_text("Name", size = 0.5) +
     tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = 0.5) +
-    tm_compass(color.dark = "gray60", position = c("left", "top")) +
-    tm_layout(legend.outside = FALSE) -> tm1
-tm1
+    tm_basemap("Esri.WorldImagery") -> tm2
+
+tmap::tm_shape(LULC_ESRI_2017) +
+  tm_raster(col.legend = tm_legend("ESRI-IO, 2017")) +
+  tm_shape(aoi) + tm_borders(col="black", lwd=1) +
+  tm_text("Name", size = 0.5) +
+  tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = 0.5) +
+  tm_basemap("Esri.WorldImagery") -> tm3
+
+tmap::tm_shape(LULC_RSPB_2019) +
+  tm_raster(col.legend = tm_legend("Gardner, 2019")) +
+  tm_shape(aoi) + tm_borders(col="black", lwd=1) +
+  tm_text("Name", size = 0.5) +
+  tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = 0.5) +
+  tm_basemap("Esri.WorldImagery") -> tm4
+
+tmap::tmap_arrange(tm1, tm4, nrow=1)
+tmap::tmap_arrange(tm2, tm4, nrow=1)
+tmap::tmap_arrange(tm3, tm4, nrow=1)
 ```
 
-![](images/Winrock_RSPB_Map_SurroundingDeforestation_051325.png)
+## Derive Forest Layers
+
+```{r, eval=T, class.source = c("numCode", "r", "numberLines"), cache=T}
+FOREST_HANSEN_2013  = terra::ifel(LULC_HANSEN_2013 == 1, 1, 0)
+FOREST_HANSEN_2019  = terra::ifel(LULC_HANSEN_2019 == 1, 1, 0)
+FOREST_HANSEN_2023  = terra::ifel(LULC_HANSEN_2023 == 1, 1, 0)
+FOREST_WINROCK_2014 = terra::ifel(LULC_WINROCK_2014 == 3, 1, 0)
+FOREST_WINROCK_2019 = terra::ifel(LULC_WINROCK_2019 == 3, 1, 0)
+FOREST_WINROCK_2024 = terra::ifel(LULC_WINROCK_2024 == 3, 1, 0)
+FOREST_RSPB_2019    = terra::ifel(LULC_RSPB_2019 == 3, 1, 0)
+FOREST_ESRI_2017    = terra::ifel(LULC_ESRI_2017 == 2, 1, 0)
+
+# Raster dictionaries
+code_dict_forest <- data.frame(
+  value = c(0, 1), 
+  label = c("Non-Forest", "Forest"))
+
+levels(FOREST_HANSEN_2013)  = code_dict_forest
+levels(FOREST_HANSEN_2019)  = code_dict_forest
+levels(FOREST_HANSEN_2023)  = code_dict_forest
+levels(FOREST_WINROCK_2014) = code_dict_forest
+levels(FOREST_WINROCK_2019) = code_dict_forest
+levels(FOREST_WINROCK_2024) = code_dict_forest
+levels(FOREST_ESRI_2017)    = code_dict_forest
+levels(FOREST_RSPB_2019)    = code_dict_forest
+```
 
 <div>
 
 </div>
 
-```{r, echo=T, message=F, warning=F, error=F, comment=NA, class.source = c("numCode", "r", "numberLines")}
-cell_area_ha = prod(terra::res(FOREST_COUNTY_2013)) / 10000
+## Visualize Forest Layers
+
+```{r, eval=T, class.source = c("numCode", "r", "numberLines"), cache=T}
+tmap::tmap_mode("view")
+tmap::tm_shape(FOREST_HANSEN_2019) +
+  tm_raster(col.legend = tm_legend("Hansen, 2019")) +
+  tm_shape(aoi) + tm_borders(col="black", lwd=1) + 
+  tm_text("Name", size = 0.5) +
+  tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = 0.6) +
+  tm_basemap("Esri.WorldImagery") -> tm5
+
+tmap::tm_shape(FOREST_WINROCK_2019) +
+  tm_raster(col.legend = tm_legend("Winrock, 2019")) +
+  tm_shape(aoi) + tm_borders(col="black", lwd=1) +
+    tm_text("Name", size = 0.5) +
+    tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = 0.5) +
+    tm_basemap("Esri.WorldImagery") -> tm6
+
+tmap::tm_shape(FOREST_ESRI_2017) +
+  tm_raster(col.legend = tm_legend("ESRI-IO, 2017")) +
+  tm_shape(aoi) + tm_borders(col="black", lwd=1) +
+    tm_text("Name", size = 0.5) +
+    tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = 0.5) +
+    tm_basemap("Esri.WorldImagery") -> tm7
+
+tmap::tm_shape(FOREST_RSPB_2019) +
+  tm_raster(col.legend = tm_legend("Gardner, 2019")) +
+  tm_shape(aoi) + tm_borders(col="black", lwd=1) +
+  tm_text("Name", size = 0.5) +
+  tm_scalebar(position = c("RIGHT", "BOTTOM"), text.size = 0.5) +
+  tm_basemap("Esri.WorldImagery") -> tm8
+
+tmap::tmap_arrange(tm5, tm8, nrow=1)
+tmap::tmap_arrange(tm6, tm8, nrow=1)
+tmap::tmap_arrange(tm7, tm8, nrow=1)
+```
+
+<div>
+
+</div>
+
+## Correction Factors
+
+```{r, eval=T, echo=T, message=F, warning=F, error=F, comment=NA, class.source = c("numCode", "r", "numberLines")}
+# helper function
 getForestArea = function(forest_raster, voi, cell_area) {
   forest_ex = terra::extract(forest_raster, voi, fun = sum, na.rm=T)
   forest_sum = forest_ex[[2]]
@@ -209,45 +368,58 @@ getForestArea = function(forest_raster, voi, cell_area) {
   return(forest_area)
 }
 
-sum2013 = terra::extract(FOREST_PROJECT_2013, voi, fun=sum, na.rm=T)
-sum2023 = terra::extract(FOREST_PROJECT_2023, voi, fun=sum, na.rm=T)
-sum2013 = terra::extract(FOREST_PROJECT_2013, voi, fun = sum, na.rm = TRUE)
+# estimate areas
+cell_area_ha_hansen  = prod(terra::res(FOREST_HANSEN_2019)) / 10000
+cell_area_ha_winrock = prod(terra::res(FOREST_WINROCK_2019)) / 10000
+cell_area_ha_esri    = prod(terra::res(FOREST_ESRI_2017)) / 10000
+cell_area_ha_rspb    = prod(terra::res(FOREST_RSPB_2019)) / 10000
 
-aoi$ForestArea2013 = sum2013[,2] * cell_area_ha
-aoi$ForestArea2023 = sum2023[,2] * cell_area_ha
-aoi$AnnualDeforestation_ha = round((aoi$ForestArea2013 - aoi$ForestArea2023) / 10, 2)
+sum2019_hansen  = terra::extract(FOREST_HANSEN_2019, voi, fun=sum, na.rm=T)
+sum2019_winrock = terra::extract(FOREST_WINROCK_2019, voi, fun=sum, na.rm=T)
+sum2017_esri    = terra::extract(FOREST_ESRI_2017, voi, fun=sum, na.rm=T)
+sum2019_rspb    = terra::extract(FOREST_RSPB_2019, voi, fun=sum, na.rm=T)
 
-add_total <- \(x) {x |> 
-    summarise(Name = "Total", across(where(is.numeric), sum)) |>
-    bind_rows(x)
-  }
+aoi$ForestArea_Hansen  = round((sum2019_hansen[,2] * cell_area_ha_hansen) / 10, 2)
+aoi$ForestArea_Winrock = round((sum2019_winrock[,2]* cell_area_ha_winrock)/ 10, 2)
+aoi$ForestArea_ESRI    = round((sum2017_esri[,2] * cell_area_ha_esri)/ 10, 2)
+aoi$ForestArea_RSPB    = round((sum2019_rspb[,2] * cell_area_ha_rspb)/ 10, 2)
+
+add_total <- \(x) {x |> summarise(
+  Name = "Total", across(where(is.numeric), sum)) |> 
+    bind_rows(x)}
 
 summary_table = aoi |>
   sf::st_drop_geometry() |>
   dplyr::mutate(
-    Forest_2013_pct = round((ForestArea2013 / total_ha) * 100, 2),
-    Forest_2023_pct = round((ForestArea2023 / total_ha) * 100, 2)) |>
-  dplyr::select(Name, 
-                total_ha, 
-                ForestArea2013, 
-                Forest_2013_pct, 
-                ForestArea2023, 
-                Forest_2023_pct, 
-                AnnualDeforestation_ha) |> add_total()
+    Correction_RSPB_Hansen = ForestArea_RSPB / ForestArea_Hansen,
+    Correction_RSPB_Winrock = ForestArea_RSPB / ForestArea_Winrock,
+    Correction_RSPB_ESRI = ForestArea_RSPB / ForestArea_ESRI) |>
+  dplyr::select(
+    Name, total_ha, 
+    ForestArea_Hansen, 
+    ForestArea_Winrock, 
+    ForestArea_ESRI, 
+    ForestArea_RSPB, 
+    Correction_RSPB_Hansen,
+    Correction_RSPB_Winrock,
+    Correction_RSPB_ESRI) |> 
+  add_total()
 
-flextable(summary_table[,1:7]) |> 
+flextable(summary_table[,1:9]) |> 
   fontsize(size=8,part="all") |>
   set_table_properties(layout = "autofit")
 
 #print(summary_table)
-write.csv(summary_table, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Surrounding Deforestation/Winrock_RSPB_Table_SurroundingDeforestation_051525.csv")
+write.csv(summary_table, "/Users/seamus/Library/CloudStorage/OneDrive-WinrockInternationalInstituteforAgriculturalDevelopment/20087 - RSPB Gola Feasibility/Deliverables/Surrounding Deforestation/Winrock_RSPB_Table_CorrectionFactors_060625.csv")
 ```
 
 <div>
 
 </div>
 
+#### Runtime settings
+
 ```{r, class.source = c("numCode", "r", "numberLines")}
 devtools::session_info()
-Sys.getenv()
+#Sys.getenv()
 ```

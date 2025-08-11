@@ -39,10 +39,15 @@ d-article { contain: none; }
     overflow-y: auto;
     border: none;
     background: none; }
-    .d-contents nav h4 {
+    .d-contents nav h3 {
       text-indent: 0; }
     input[type="button" i] {  
       display: none; }
+  }
+
+#TOC.hide { 
+  opacity: 0;
+  transition: visibility 0s linear 0.5s, opacity 0.5s;
   }
 
 /* ---- Floating TOC styling -------- */
@@ -75,6 +80,38 @@ pre, code {
 }
 
 pre code {
-  font-size: 10px !important;
+  font-size: 11px !important;
   white-space: inherit !important; 
+}
+
+
+/* Improved Code Chunk Styling */
+div.sourceCode {
+  background-color: #f8f9fa; /* subtle grey background */
+  border-radius: 6px;
+  padding: 8px;
+  margin: 10px 0;
+  border: 1px solid #e3e3e3; /* very subtle border for definition */
+  line-height: 1; /* compress line spacing */
+}
+
+div.sourceCode pre {
+  margin: 0;
+  padding: 0;
+}
+
+pre code {
+  font-family: "Roboto Mono", "Courier New", monospace;
+  font-size: 11px !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  line-height: 1 !important; /* ensure consistent tight line spacing */
+}
+
+/* Optional: slightly highlight inline code for distinction */
+code:not(pre code) {
+  background-color: rgba(233, 236, 239, 0.8);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 90%;
 }

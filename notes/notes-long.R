@@ -1,4 +1,20 @@
 
+
+
+output:
+  distill::distill_article:
+    repository_url: https://github.com/seamusrobertmurphy/VM0048-feasibility-deforisk-leakage.git
+    css: styles.css
+    theme: united
+    highlight: tango
+    toc: true
+    toc_depth: 5
+    toc_float: true
+    code_folding: false
+    fig_width: 12
+    fig_height: 8
+
+
 #sf::st_write(slope_leakage_mask, "./data/MASK/slope_leakage_mask.shp", delete_dsn=T)
 #sf::st_write(wetlands_leakage_mask, "./data/MASK/wetlands_leakage_mask.shp", delete_dsn=T)
 
@@ -1143,7 +1159,7 @@ output:
 
 editor_options: 
   markdown: 
-    wrap: 120
+    wrap: 100
 
 
 
@@ -1160,3 +1176,135 @@ editor_options:
   background-repeat: no-repeat;
   }
   ```
+  
+  
+  toc_depth: 6
+  toc_float: true
+  css: styles.css
+  self_contained: true
+  highlight: kate
+  
+  
+  Standard Class
+  ISO 19103:2015 Geographic information —
+  Conceptual schema language
+  DateTime, CharacterString,
+  Integer
+  ISO 19105:2022 Geographic information —
+  Conformance and testing
+  - (Abstract test suite)
+  ISO 19106:2004 Geographic information —
+  Profiles
+  - (Abstract test suite)
+  ISO 19107:2019 Geographic information —
+  Spatial schema
+  - (Geometric elements)
+  ISO 19109:2015 Geographic information —
+  Rules for application schema
+  - (General future model)
+  ISO 19115-1:2014 Geographic information
+  — Metadata — Part 1: Fundamentals
+  CI_Responsibility,
+  CI_PresentationFormCode
+  ISO 19157-1:2023 Geographic information
+  — Data quality — Part 1: General requirements QualityElement
+  
+  
+  
+  Leakage Belt Finalization:
+    
+    ```{r, message=F, warning=F, error=F, comment=NA, eval=F}
+  aoi_union = sf::st_transform(aoi, 32629) |>  sf::st_union() |> sf::st_make_valid()
+  leakage_buffer = sf::st_buffer(aoi_union, dist = 5500, endCapStyle="ROUND") |>
+    sf::st_as_sf() |>  sf::st_zm() |> sf::st_cast() |> sf::st_make_valid() 
+  leakage_buffer = concaveman::concaveman(leakage_buffer, concavity=5) |> 
+    sf::st_zm() |> sf::st_make_valid()
+  leakage_belt_whole = sf::st_buffer(leakage_buffer, dist = 4500, endCapStyle="ROUND") |> 
+    sf::st_make_valid() 
+  
+  tmap::tmap_mode("view")
+  tmap::tm_shape(leakage_belt_whole) + 
+    tmap::tm_polygons(col="orange",fill="orange",fill_alpha=0.3,lwd=1)+
+    tmap::tm_add_legend(type="lines",col="orange",labels="Leakage Belt (10km)") +
+    tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1, col="white") +
+    tmap::tm_basemap("Esri.WorldImagery")
+  ```
+  
+  ```{r, echo=F, message=F, warning=F, error=F, comment=NA, eval=F}
+  tmap::tmap_mode("view")
+  tmap::tm_shape(leakage_belt_whole) + 
+    tmap::tm_polygons(col="orange",fill="orange",fill_alpha=0.3,lwd=1)+
+    #tmap::tm_add_legend(type="lines",col="orange",labels="Leakage Belt (10km)") +
+    tmap::tm_shape(aoi) + tmap::tm_borders(lwd=1, col="white") +
+    #tmap::tm_graticules(lines=T,labels.rot=c(0,90),lwd=0.2) +
+    #  tmap::tm_scale_bar(position = c("RIGHT", "BOTTOM"), text.size = .5) + 
+    #  tmap::tm_compass(color.dark = "gray60", text.color = "gray60", position = c("left", "top")) +
+    tmap::tm_basemap("Esri.WorldImagery")
+  ```
+  
+  
+  
+  leakage_buffer = concaveman::concaveman(leakage_buffer, concavity=5) |> 
+    sf::st_zm() |> sf::st_make_valid()
+  leakage_belt_whole = sf::st_buffer(leakage_buffer, dist = 4500, endCapStyle="ROUND") |> 
+    sf::st_make_valid() 
+  
+  
+  ---
+    title: 'Leakage Belt Delineation'
+  description: |
+    VM0048-compliant delineation of valid leakage area for the Gola REDD+ Forest Carbon Project, Liberia
+  author:
+    - name: Seamus Murphy 
+  url: mailto:Seamus.Murphy@winrock.org
+  affiliation: Winrock International
+  affiliation_url: https://winrock.org/
+    - name: Krysla Lima Fernandes 
+  url: mailto:Krysla.Lima@winrock.org
+  affiliation_url: https://winrock.org/
+    - name: Rajesh Bista
+  url: mailto:Rajesh.Bista@winrock.org
+  affiliation_url: https://winrock.org/
+    - name: Meyru Bhanti 
+  url: mailto:Meyru.Bhanti@winrock.org
+  affiliation_url: https://winrock.org/            
+    date: "`r Sys.Date()`"
+  output:
+    distill::distill_article:
+    repository_url: https://github.com/seamusrobertmurphy/VM0048-feasibility-deforisk-leakage.git
+  css: styles.css
+  theme: united
+  highlight: pygments
+  code_folding: show
+  toc: true
+  toc_depth: 5
+  toc_float:
+    collapsed: false
+  smooth_scroll: true
+  fig_width: 12
+  fig_height: 8
+  editor_options:
+    markdown:
+    wrap: 100
+  ---
+    \
+
+  
+  #TOC {
+  opacity: 1;
+  position: fixed;
+  left: calc(7%);
+  top: calc(5.5%);
+  /* width: 20%; */
+    max-width: 260px;
+  max-height: 85%;
+  overflow-y: auto;
+  background: white;            /* Optional, remove to enable the blur filter (just for fun). */
+    backdrop-filter: blur(10px);  /* Optional, wouldn't not work with Firefox browser. */
+  padding: 10px;                /* Optional */
+  /* border-right: 1px solid rgba(0, 0, 0, 0.1); */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  /* border-radius: 1px; */
+  transition: all 0.5s;
+  z-index: 999;                 /* Optional */
+  }
