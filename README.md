@@ -5,7 +5,7 @@
 
 ## Summary
 
-This initial review of the RSPB REDD+ project provides comparison of 
+This initial review of a REDD+ project provides comparison of 
 methodologies for deriving forest area estimates and activity data.
 Please consider, this review is an early effort and remains open for
 correction or improvement, with the understanding that previous methods
@@ -17,38 +17,6 @@ deforestation at the pixel level based on risk scoring informed by VT0007 and
 VMD0055 guides.
 
 **Forest Area Estimates** (2014--2024):
-
--   Gola National Park:
-
-    2013: Reported 88,881.98 ha; 2014 Reviewed 88,096.44 ha.
-
-    2019: Reported 87,869.96 ha; Reviewed 87,869.96 ha.
-
-    2024: Reported 88,177.83 ha; Reviewed 88,177.83 ha.
-
--   Norman:
-
-    2013: Reported 6993.26 ha; 2014 Reviewed 6,988.65 ha.
-
-    2019: Reviewed 6,963.31 ha.
-
-    2024: Reviewed 6,993.08 ha.
-
--   Tonglay:
-
-    2013: Reported 29,515.3 ha; 2014 Reviewed 29,362.95 ha.
-
-    2019: Reviewed 29,152.85 ha.
-
-    2024: Reviewed 29,345.93 ha.
-
--   Total Project Area:
-
-    2014: Reported 125,328.36 ha; Reviewed 124,316.7 ha.
-
-    2019: Reviewed 123,854.3 ha.
-
-    2024: Reviewed 124,388 ha.
 
 ![](data/tables/Table%201%20Project%20files%20reviewed.png)
 
