@@ -16,8 +16,6 @@ estimating baseline deforestation areas, and second on allocating annual
 deforestation at the pixel level based on risk scoring informed by VT0007 and 
 VMD0055 guides.
 
-**Forest Area Estimates** (2014--2024):
-
 ![](data/tables/Table%201%20Project%20files%20reviewed.png)
 
 ##### Table 1: Project files reviewed in this assessment
