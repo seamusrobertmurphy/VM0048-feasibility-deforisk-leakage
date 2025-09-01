@@ -1103,11 +1103,6 @@ writeRaster(kmeans, "./data/kmeans/NDVI_STACK_KMEANS.tif", overwrite=T)
 writeRaster(ndvi_thresholds, "./data/thresholds/NDVI_STACK_THRESHOLDS.tif", overwrite=T)
 ```
 
-
-
-
-
-
 ### Appendix I: 2019 and 2024 classifiers
 
 To run these, you may change eval=F to eval=T at the top of chunk in the .Rmd or .R file saved in the OneDrive folder.
